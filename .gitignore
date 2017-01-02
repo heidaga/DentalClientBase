@@ -1,0 +1,6 @@
+*.7z
+*.zip
+*pkl
+*.pyc
+ui_*.py
+*_rc.py
