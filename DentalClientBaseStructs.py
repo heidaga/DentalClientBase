@@ -1,6 +1,7 @@
 import cPickle as pickle
 import os
 from DentalClientBaseToolkit import HashClientID
+from DentalClientBaseSettings import *
 
 # ***********************************************************************
 # ***********************************************************************
@@ -41,7 +42,51 @@ class DentalAct:
 		self.Type = sType
 		self.Qty = iQty
 		self.UnitPrice = fUnitPrice
+		self.SubTotal = self.Qty  * self.UnitPrice
 		self.Paid = 0
+
+	def __len__(self):
+		""" returns number of member variables """
+		return 6
+
+	def SetVarDate(self, sDate):
+		self.Date = sDate
+		return 0
+
+	def SetVarQty(self, iNewQty):
+		self.Qty = iNewQty
+		self.SubTotal = self.Qty  * self.UnitPrice
+		return 0
+
+	def SetVarUnitPrice(self, fNewUnitPrice):
+		self.UnitPrice = fNewUnitPrice
+		self.SubTotal = self.Qty  * self.UnitPrice
+		return 0
+
+	def SetVarPaid(self, iPaid):
+		self.Paid = iPaid
+		return 0
+
+	""" ONLY FOR SORTING : acts as a getter 
+		To sort dates, i only return the date string
+		then the output value is Qt-formatted in the GUI class 
+	"""
+	def __getitem__(self, iCol):
+		if iCol == COL_ACTDATE: 
+			return self.Date
+			# return QtCore.QDateTime.fromString(self.Date, "ddmmyyyy")
+		elif iCol == COL_ACTTYPE: 
+			return self.Type
+		elif iCol == COL_ACTUNITPRICE: 
+			return self.UnitPrice
+		elif iCol == COL_ACTQTY: 
+			return self.Qty
+		elif iCol == COL_ACTSUBTOTAL: 
+			return self.SubTotal 
+		elif iCol == COL_ACTPAID: 
+			return self.Paid
+		else: raise IndexError("Index used in __getitem__ is not supported")
+
 
 # ***********************************************************************
 # ***********************************************************************
