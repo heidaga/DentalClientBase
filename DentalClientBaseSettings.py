@@ -9,6 +9,14 @@ APP_RESOURCES = "res"
 APP_DIR = os.getcwd()
 APP_SETTINGS = os.path.join(APP_DIR, APP_RESOURCES, "settings.ini")
 
+APP_SETTINGS_COLOR_TABLE ="""
+QTableView 
+{ 
+	selection-background-color: #800000FF; 
+	selection-color: yellow; 
+}
+"""
+
 #########################
 # TABLE- DOCTORS
 #########################
@@ -33,6 +41,9 @@ COL_ACTUNITPRICE    = 2
 COL_ACTQTY          = 3
 COL_ACTSUBTOTAL     = 4
 COL_ACTPAID         = 5 
+
+# If this option is on, user can load
+# APP_SETTINGS_ALLOW_CUSTOM_ACTTYPE = False
 
 #########################
 # TABLE- DEFAULT ACTS

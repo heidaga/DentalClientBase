@@ -147,6 +147,8 @@ class GeneralSettings(QtGui.QMainWindow):
             DefaultActs = pkl_load(filename) # returns a dict object
             if(DefaultActs == None): return
             self.DefaultActs = DefaultActs
+            sMsg = "The default acts-prices database has been modified. You should restart the application before changes take effect."
+            toolkit_ShowWarningMessage(sMsg)
    
         if(self.sender() == self.ui.PB_LoadDatabaseDoctors):
             self.DoctorsActsDatabasePath = filename
@@ -235,7 +237,7 @@ class GeneralSettings(QtGui.QMainWindow):
         for iRow in xrange(table.rowCount()):
             sName = table.item(iRow, 0).text()
             sPrice = table.item(iRow, 1).text()
-            self.DefaultActs[sName] = float(sPrice)
+            self.DefaultActs[sName.upper()] = float(sPrice)
         return 0
 
     def GetPath_DoctorActsDatabase(self):
@@ -289,17 +291,17 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.winsettings = GeneralSettings(self)
 
         list_doctors = []
-        list_acts_first_doctor = []
+        # list_acts_first_doctor = []
+        self.DefaultActsDict = self.winsettings.GetDefaultActs()
         self.ParsedDentalDatabase = self.winsettings.GetDoctorsActs() 
         if type(self.ParsedDentalDatabase) == TYPE_DENTAL_DATABASE:
             if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
                 list_doctors = self.ParsedDentalDatabase.GetListDoctors()
-                first_doctor = list_doctors[0]
-                list_acts_first_doctor = self.ParsedDentalDatabase.GetListActsByDoctorID(first_doctor.id())
+                # first_doctor = list_doctors[0]
+                # list_acts_first_doctor = self.ParsedDentalDatabase.GetListActsByDoctorID(first_doctor.id())
 
         self.TableModelDoctors = DoctorTableModel(self, list_doctors)
-        # self.TableModelActs = ActTableModel(self, [])
-        self.TableModelActs = ActTableModelNew(self, self.ParsedDentalDatabase)
+        self.TableModelActs = ActTableModelNew(self)
 
         # TABLE VIEW : DOCTORS
         table_view = self.ui.m_tableclients
@@ -324,6 +326,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # TABLE VIEW : ACTS
         table_view = self.ui.m_tableacts
         table_view.setModel(self.TableModelActs)
+        # table_view.setEditTriggers( QtGui.QAbstractItemView.NoEditTriggers )
+        table_view.setDragDropOverwriteMode(True)
+        # table_view.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        # table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
+        table_view.setTextElideMode(QtCore.Qt.ElideNone)
         table_view.setShowGrid(False)
         sFont = APP_SETTINGS_TABLE_ACTS_FONT
         iFontSize = APP_SETTINGS_TABLE_ACTS_FONTSIZE
@@ -335,10 +342,17 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         hh = table_view.horizontalHeader()
         hh.setStretchLastSection(True)
         # enable sorting
-        table_view.setSortingEnabled(True)
-        qSpinBoxDeleg = SpinBoxDelegate()
-        table_view.setItemDelegate(qSpinBoxDeleg)
-        # table_view.setItemDelegateForColumn(3, qSpinBoxDeleg)
+        table_view.setSortingEnabled(True)        
+        # Set delegates (AND DONT FORGET TO CHECK FLAGS SET BY MODEL)
+        # http://stackoverflow.com/a/27256558/2192115
+        qDelegateSpinBox = SpinBoxDelegate(table_view)
+        qDelegateDate = DateItemDelegate(table_view)
+        qDelegateCheckbox = CheckBoxDelegate(table_view)
+        qDelegateCombobox = ComboDelegate(table_view, self.DefaultActsDict.keys())
+        table_view.setItemDelegateForColumn(COL_ACTQTY, qDelegateSpinBox)
+        table_view.setItemDelegateForColumn(COL_ACTDATE, qDelegateDate)
+        table_view.setItemDelegateForColumn(COL_ACTPAID, qDelegateCheckbox)
+        table_view.setItemDelegateForColumn(COL_ACTTYPE, qDelegateCombobox)
 # 
     # ********************************************************************************
 
@@ -375,7 +389,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     # **********  TABLE ACTS EVENTS ***********************
 
-    def OnTableComboChangeValue(self, iNumber):
+    def OnTableComboChangeValue__DEPRECATED(self, iNumber):
         table = self.ui.m_tableacts
         # http://stackoverflow.com/questions/1332110/selecting-qcombobox-in-qtablewidget
         iRow = self.sender().property("row")
@@ -425,11 +439,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         rowCount = table.rowCount()
         if rowCount == 0:
          return 0
-        print "iRowToDel", iRowToDel
-        print "rowCount (before)", rowCount
+        # print "iRowToDel", iRowToDel
+        # print "rowCount (before)", rowCount
         table.removeRow(iRowToDel)
         rowCount = table.rowCount()
-        print "rowCount (after)", rowCount
+        # print "rowCount (after)", rowCount
         # table.setRowCount(iRow-1)
         return 0 
 
@@ -518,4 +532,15 @@ if __name__ == '__main__':
 
     window = DentalClientBaseGUI()
     window.show()
+    window.setStyleSheet(APP_SETTINGS_COLOR_TABLE)
     sys.exit(app.exec_())
+
+
+
+# AUTOCOMPLETE SUBLIME
+# COL_ACTDATE         = 0
+# COL_ACTTYPE         = 1
+# COL_ACTUNITPRICE    = 2
+# COL_ACTQTY          = 3
+# COL_ACTSUBTOTAL     = 4
+# COL_ACTPAID         = 5 

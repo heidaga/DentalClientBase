@@ -50,21 +50,27 @@ class DentalAct:
 		return 6
 
 	def SetVarDate(self, sDate):
-		self.Date = sDate
+		self.Date = str(sDate)
 		return 0
 
 	def SetVarQty(self, iNewQty):
-		self.Qty = iNewQty
+		self.Qty = int(iNewQty)
 		self.SubTotal = self.Qty  * self.UnitPrice
 		return 0
 
 	def SetVarUnitPrice(self, fNewUnitPrice):
-		self.UnitPrice = fNewUnitPrice
+		self.UnitPrice = float(fNewUnitPrice)
 		self.SubTotal = self.Qty  * self.UnitPrice
 		return 0
 
 	def SetVarPaid(self, iPaid):
-		self.Paid = iPaid
+		self.Paid = int(iPaid)
+		return 0
+
+	def SetVarType(self, sType, fDefaultUnitPrice = None):
+		self.Type = str(sType)
+		if fDefaultUnitPrice is not None:
+			self.SetVarUnitPrice(fDefaultUnitPrice)
 		return 0
 
 	""" ONLY FOR SORTING : acts as a getter 
@@ -82,7 +88,8 @@ class DentalAct:
 		elif iCol == COL_ACTQTY: 
 			return self.Qty
 		elif iCol == COL_ACTSUBTOTAL: 
-			return self.SubTotal 
+			# return self.SubTotal 
+			return self.Qty  * self.UnitPrice 
 		elif iCol == COL_ACTPAID: 
 			return self.Paid
 		else: raise IndexError("Index used in __getitem__ is not supported")
@@ -199,9 +206,11 @@ if __name__ == '__main__':
 		DB_DEFAULTPRICES = "test_defaultprices.pkl"
 		
 		defaultprices = dict()
-		defaultprices["Ceramo-ceramique"]= 13.5
-		defaultprices["Ceramo-metallic"]= 11.6
-		defaultprices["Metal pur"]= 120
+		defaultprices["CERAMIC"]= 13.5
+		defaultprices["CCM"]= 13.5
+		defaultprices["FM"]= 11.6
+		defaultprices["FULL-DENTURE"]= 120
+
 		pkl_save(defaultprices, DB_DEFAULTPRICES)
 		return 0
 
@@ -214,12 +223,15 @@ if __name__ == '__main__':
 		id2 = MyDatabase.AddDoctor("Khalil", "Gebran", "71555444")
 		id3 = MyDatabase.AddDoctor("Alaa", "Zalzali", "70885146")
 		 
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05022015", "Ceramic", 2, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25032015", "Metal", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01112016", "Ceramic", 1, 12)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "08122016", "Pont", 4, 37)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20122016", "Ceramo-ceramique", 1, 50)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22122016", "Metal-Metal", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05022015", "CERAMIC", 2, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25032015", "FULL-DENTURE", 10, 6.5)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25032015", "CCM", 10, 6.5)
+		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01112016", "CERAMIC", 1, 12)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "08122016", "FULL-DENTURE", 4, 37)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20122016", "CERAMIC", 1, 50)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22122016", "CCM", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22122016", "FM", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "28122016", "FULL-DENTURE", 6, 10)
 		 
 		pkl_save(MyDatabase  , DB_CLIENTS_AND_ACTS)
 
@@ -239,7 +251,7 @@ if __name__ == '__main__':
 			print "opening file 2 succeeded"
 
 
-	# test()
+	test()
 	test2()
 	# test3()
 

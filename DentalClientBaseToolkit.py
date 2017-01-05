@@ -9,6 +9,7 @@ http://doc.qt.io/qt-4.8/qabstractitemmodel.html#endResetModel
 # *** qt specific
 from PySide import QtGui, QtCore
 from PySide.QtGui import QMessageBox
+from PySide.QtGui import QColor
 from PySide.QtCore import qDebug
 from enum import Enum
 from DentalClientBaseSettings import *
@@ -40,7 +41,7 @@ def toolkit_populate_table_from_dict(table_widget, values_dict):
     # table_widget.setHorizontalHeaderLabels(['name', 'value'])
     for iRow, field in enumerate(values_dict):
         dValue = values_dict[field]
-        toolkit_create_formatted_cell(table_widget, iRow, 0, field )        
+        toolkit_create_formatted_cell(table_widget, iRow, 0, field.upper() )        
         toolkit_create_formatted_cell(table_widget, iRow, 1, str(dValue) )
 
 def toolkit_create_formatted_cell(table_widget, iRow, iCol, value):
@@ -54,6 +55,7 @@ def toolkit_create_formatted_cell(table_widget, iRow, iCol, value):
 
 def toolkit_format_existing_cell(table_widget, iRow, iCol):
     qItem = table_widget.item(iRow, iCol)
+    qItem.setText(qItem.text().upper())
     qItem.setTextAlignment( QtCore.Qt.AlignCenter )
     sFont = APP_SETTINGS_TABLE_DEFAULTACTS_FONT
     iFontSize = APP_SETTINGS_TABLE_DEFAULTACTS_FONTSIZE
@@ -70,6 +72,19 @@ def toolkit_ShowWarningMessage(msg):
     res = APP_SETTINGS_SCALED_ICONS_RESOLUTION
     msgBox.setIconPixmap(QtGui.QPixmap('res/information.png').scaled(res,res))
     return msgBox.exec_()
+
+
+def toolkit_ShowWarningMessage2(msg):
+    msgBox = QMessageBox()
+    msgBox.setText("Warning")
+    msgBox.setInformativeText(msg)
+    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+    msgBox.setDefaultButton(QMessageBox.Cancel)
+    # msgBox.setIcon(QMessageBox.Warning)
+    res = APP_SETTINGS_SCALED_ICONS_RESOLUTION
+    msgBox.setIconPixmap(QtGui.QPixmap('res/information.png').scaled(res,res))
+    return msgBox.exec_()
+
 
 def toolkit_ShowCriticalMessage(msg):
     msgBox = QMessageBox()
@@ -113,14 +128,6 @@ def toolkit_new_item(table_widget, iRow, iCol, sText):
 # ('ACETONE', 56.3, -94.7, 0.791)
 # ]
 
-# class ACTCOLUMN(Enum):
-#     DATE         = 0
-#     TYPE         = 1
-#     UNITPRICE    = 2
-#     QTY          = 3
-#     SUBTOTAL     = 4
-#     PAID         = 5
-
 # DoctorTableView is not a necessary implementation
 # it is only based on QTableView, ie no delegates
 class DoctorTableView(QtGui.QTableView):
@@ -130,12 +137,6 @@ class DoctorTableView(QtGui.QTableView):
 class ActTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
         QtGui.QTableView.__init__(self, *args, **kwargs)
-
-        # self.setItemDelegateForColumn(COL_ACTDATE, DateItemDelegate(self))
-        # self.setItemDelegateForColumn(COL_ACTTYPE, ComboDelegate(self))
-        # self.setItemDelegateForColumn(COL_ACTQTY, SpinBoxDelegate(self))
-        # self.setItemDelegateForColumn(COL_ACTPAID, CheckBoxDelegate(self))
-        # setItemDelegate
 
 class DoctorTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, myListOfDoctors, *args):
@@ -168,10 +169,6 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
             boldFont = QtGui.QFont()
             boldFont.setBold(True)
             return boldFont
-
-        # elif role == QtCore.Qt.BackgroundRole:
-            # if (row == 1 && col == 2):
-                # return 
 
         elif role == QtCore.Qt.TextAlignmentRole:
              return QtCore.Qt.AlignCenter
@@ -347,10 +344,11 @@ class ActTableModel(QtCore.QAbstractTableModel):
     #     return True
 
 class ActTableModelNew(QtCore.QAbstractTableModel):
-    def __init__(self, parent, dentalDatabaseInstance, *args):
+    def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
 
-        self.database = dentalDatabaseInstance
+        self.database = parent.ParsedDentalDatabase
+        self.defaultPrices = parent.DefaultActsDict
         self.doctorID = -1
         self.mylist = [] #initially not showing anything
         self.bUpToDate = True
@@ -367,27 +365,7 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
 
     # ***************************************************    
     #private get set functions
-    # def GetDentalActDetail(self, DentalActInstance, iCol):
-    #     jAct = DentalActInstance
 
-    # ***************************************************
-    def SetDentalActDetail(self, DentalActInstance, iCol, value):
-        jAct = DentalActInstance
-        if iCol < 0 or iCol > self.columnCount(None): return None
-        elif iCol == COL_ACTDATE: 
-            jAct.SetVarDate(QtCore.QDateTime.toString(value, "ddmmyyyy"))
-        elif iCol == COL_ACTTYPE: 
-            jAct.Type = value
-            return 
-        elif iCol == COL_ACTUNITPRICE: 
-            return jAct.SetVarUnitPrice(value)
-        elif iCol == COL_ACTQTY: 
-            return jAct.SetVarQty(value)
-        # elif iCol == COL_ACTSUBTOTAL: 
-            # return jAct.SubTotal 
-        elif iCol == COL_ACTPAID: 
-            return jAct.SetVarPaid(value)
-    # ***************************************************
     def SetModelForDoctorByID(self, iDoctorID):
         """ table view using this model shoud use SetModel 
         after a call to this function """
@@ -410,22 +388,31 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         else:
             return len(self.mylist[0])
     
-    def data(self, index, role):
+    def data(self, index, role = QtCore.Qt.DisplayRole):
+        iRow = index.row()
+        iCol = index.column()
+        dentalActAtRow = self.mylist[iRow]
         if not index.isValid(): return None
         elif role == QtCore.Qt.DisplayRole:
-            iRow = index.row()
-            iCol = index.column()
             if iCol < 0 or iCol > self.columnCount(None): 
                 return None
             
-            dentalActAtRow = self.mylist[iRow]
             val = dentalActAtRow.__getitem__(iCol) # used also by "sorted"
             # special formatting when displaying dates
             if iCol == COL_ACTDATE: 
                 return QtCore.QDateTime.fromString(val, "ddmmyyyy")
             else:
                 return val
-            
+        
+        elif role == QtCore.Qt.BackgroundRole:
+            iPaid = dentalActAtRow.__getitem__(COL_ACTPAID)
+            if(iPaid == 1): 
+                background = QtGui.QBrush(QtCore.Qt.GlobalColor.blue)
+            else:
+                background = QtGui.QBrush(QtCore.Qt.GlobalColor.white)
+
+
+
     def headerData(self, col, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             return self.header[col]
@@ -453,7 +440,27 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
             iCol = index.column()            
             dentalActAtRow = self.mylist[iRow]
             self.bUpToDate = False
-            self.SetDentalActDetail(dentalActAtRow, iCol, value)
+            # self.SetDentalActDetail(dentalActAtRow, iCol, value)
+
+            jAct = dentalActAtRow
+            if iCol < 0 or iCol > self.columnCount(None): 
+                return None
+            elif iCol == COL_ACTDATE:
+                # sDate = QtCore.QDateTime.FromString(value, "ddmmyyyy") 
+                # jAct.SetVarDate(QtCore.QDateTime.toString(sDate, "ddmmyyyy"))
+                jAct.SetVarDate(value)
+            elif iCol == COL_ACTTYPE:
+                jAct.SetVarType(value, self.defaultPrices[value])
+            elif iCol == COL_ACTUNITPRICE:
+                if value == "": value = self.data(index)
+                jAct.SetVarUnitPrice(value)
+            elif iCol == COL_ACTQTY: 
+                jAct.SetVarQty(value)
+            elif iCol == COL_ACTSUBTOTAL: 
+                return False 
+            elif iCol == COL_ACTPAID: 
+                jAct.SetVarPaid(value)
+
             self.dataChanged.emit(index, index)
             return True
         return False
@@ -462,11 +469,12 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         # QtCore.Qt.ItemIsSelectable
         # QtCore.Qt.ItemIsEditable
         # QtCore.Qt.ItemIsEnabled
-        if index.column == COL_ACTSUBTOTAL:
-            return QtCore.Qt.ItemIsEnabled
+        if index.column in [ COL_ACTSUBTOTAL, COL_ACTDATE] :
+            return QtCore.Qt.NoItemFlags
         else: 
             return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
         
+
 
 
 class ComboDelegate(QtGui.QItemDelegate):
@@ -474,55 +482,64 @@ class ComboDelegate(QtGui.QItemDelegate):
     A delegate that places a fully functioning QComboBox in every
     cell of the column to which it's applied
     """
-    def __init__(self, parent):
+    def __init__(self, parent, argItemsList = []):
 
         QtGui.QItemDelegate.__init__(self, parent)
+        self.itemsList = argItemsList
 
     def createEditor(self, parent, option, index):
         combo = QtGui.QComboBox(parent)
         combo.setEditable(True)
 
         li = []
-        li.append("Zero")
-        li.append("One")
-        li.append("Two")
-        li.append("Three")
-        li.append("Four")
-        li.append("Five")
+        if len(self.itemsList) == 0:
+            li.append("Zero")
+            li.append("One")
+            li.append("Two")
+            li.append("Three")
+        else: 
+            li = [sActType.upper() for sActType in self.itemsList]
+        
         combo.addItems(li)
         self.connect(combo, QtCore.SIGNAL("currentIndexChanged(int)"), self, QtCore.SLOT("currentIndexChanged()"))
         return combo
 
-    def setEditorData(self, editor, index):
-        editor.blockSignals(True)
-        editor.setCurrentIndex(int(index.model().data(index)))
-        editor.blockSignals(False)
+    def setEditorData(self, comboBox, index):
+        # comboBox.blockSignals(True)
+        # TODO Check APP_SETTINGS_ALLOW_CUSTOM_ACTTYPE
+        sComboText = index.model().data(index).upper()
+        itemID = comboBox.findText(sComboText)
+        # print ">>> ComboDelegate sComboText", sComboText 
+        # print ">>> ComboDelegate itemID", itemID 
+        comboBox.setCurrentIndex(itemID)
+        # comboBox.setItemText(int(index.model().data(index)))
+        # comboBox.blockSignals(False)
 
-    def setModelData(self, editor, model, index):
-        model.setData(index, editor.currentIndex())
+    def setModelData(self, comboBox, model, index):
+        sMsg = "Changing the type of act will remove the current unit price.\n"
+        sMsg += "Proceed ?"
+        ret = toolkit_ShowWarningMessage2(sMsg)
+        if(ret == QMessageBox.Ok):
+            model.setData(index, comboBox.currentText().upper(), QtCore.Qt.EditRole)
 
     def currentIndexChanged(self):
         self.commitData.emit(self.sender())
 
 class SpinBoxDelegate(QtGui.QItemDelegate):
     def createEditor(self, parent, option, index):
-        editor = QtGui.QSpinBox(parent)
-        editor.setMinimum(0)
-        editor.setMaximum(100)
-  
-        return editor
+        spinBox = QtGui.QSpinBox(parent)
+        spinBox.setMinimum(0)
+        spinBox.setMaximum(100)  
+        return spinBox
   
     def setEditorData(self, spinBox, index):
-        # print "index", index
-        # print "index row", index.row()
-        # print "index column", index.column()
-        # print "index model", index.model()
         value = index.model().data(index, QtCore.Qt.DisplayRole)
         spinBox.setValue(value)
   
     def setModelData(self, spinBox, model, index):
         spinBox.interpretText()
         value = spinBox.value() 
+        # print ">>> SpinBoxDelegate spinBox.value() ", value
         model.setData(index, value, QtCore.Qt.EditRole)
   
     def updateEditorGeometry(self, editor, option, index):
@@ -581,28 +598,37 @@ class DateItemDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None):
         QtGui.QStyledItemDelegate.__init__(self, parent) 
     def displayText(self, value, locale):
-        # if(value.type() == QtCore.QVariant.DateTime):
+        if value == "": 
+            QtCore.QDate.currentDate().toString("dd/MM/yyyy")
         return value.toString("dd/MM/yyyy")
-        # return value.toDateTime().toString(QtCore.Qt.ISODate)
-        # else: return ""
         
-# class PopupNewDoctor(QtGui.QWidget):
-#     def __init__(self):
-#         QtGui.QWidget.__init__(self)
 
-#     def paintEvent(self, e):
-#         dc = QPainter(self)
-#         dc.drawLine(0, 0, 100, 100)
-#         dc.drawLine(100, 0, 0, 100)
+"""
+This enum describes the properties of an item:
 
-# Qt Types
-# QtCore.QVariant.Int
-# QtCore.QVariant.UInt
-# QtCore.QVariant.LongLong
-# QtCore.QVariant.ULongLong
-# QtCore.QVariant.Double
-# QtCore.QVariant.Char
-# QtCore.QVariant.Date
-# QtCore.QVariant.Time
-# QtCore.QVariant.DateTime
-# QtCore.QVariant.String
+Constant            Value   Description
+Qt::NoItemFlags         0   It does not have any properties set.
+Qt::ItemIsSelectable    1   It can be selected.
+Qt::ItemIsEditable      2   It can be edited.
+Qt::ItemIsDragEnabled   4   It can be dragged.
+Qt::ItemIsDropEnabled   8   It can be used as a drop target.
+Qt::ItemIsUserCheckable 16  It can be checked or unchecked by the user.
+Qt::ItemIsEnabled       32  The user can interact with the item.
+Qt::ItemIsTristate      64  The item is checkable with three separate states.
+
+
+
+
+Qt Types
+QtCore.QVariant.Int
+QtCore.QVariant.UInt
+QtCore.QVariant.LongLong
+QtCore.QVariant.ULongLong
+QtCore.QVariant.Double
+QtCore.QVariant.Char
+QtCore.QVariant.Date
+QtCore.QVariant.Time
+QtCore.QVariant.DateTime
+QtCore.QVariant.String
+
+"""
