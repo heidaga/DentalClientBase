@@ -46,7 +46,7 @@ class DentalAct:
 		self.Paid = 0
 
 	def __len__(self):
-		""" returns number of member variables """
+		""" returns number of member variables to be used externally (by Qt) """
 		return 6
 
 	def SetVarDate(self, sDate):
@@ -114,6 +114,10 @@ class DentalClient:
 		assert sname != ""
 		assert sphone != ""
 
+	def __len__(self):
+		""" returns number of member variables to be used externally (by Qt) """
+		return 3
+
 	def AppendActByDetails(self, sDate, sType, iQty, fUnitPrice):
 		cNewAct = DentalAct(sDate, sType, iQty, fUnitPrice)
 		self.acts.append(cNewAct)
@@ -132,6 +136,29 @@ class DentalClient:
 
 	def GetFullName(self):
 		return self.Firstname + " " + self.Surname
+
+	def SetVarFirstname(self, sVal):
+		self.Firstname = str(sVal)
+
+	def SetVarLastname(self, sVal):
+		self.Surname = str(sVal)
+
+	def SetVarPhone(self, sVal):
+		self.Phone = str(sVal)
+
+	""" ONLY FOR SORTING : acts as a getter 
+		To sort dates, i only return the date string
+		then the output value is Qt-formatted in the GUI class 
+	"""
+
+	def __getitem__(self, iCol):
+		if iCol == COL_DRFIRSTNAME: 
+			return self.Firstname
+		elif iCol == COL_DRLASTNAME: 
+			return self.Surname
+		elif iCol == COL_DRPHONE: 
+			return self.Phone
+		else: raise IndexError("Index used in __getitem__ is not supported")
 
 # ***********************************************************************
 # ***********************************************************************

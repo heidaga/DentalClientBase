@@ -76,7 +76,6 @@ def toolkit_ShowWarningMessage(msg):
     msgBox.setIconPixmap(QtGui.QPixmap('res/information.png').scaled(res,res))
     return msgBox.exec_()
 
-
 def toolkit_ShowWarningMessage2(msg):
     msgBox = QMessageBox()
     msgBox.setText("Warning")
@@ -87,7 +86,6 @@ def toolkit_ShowWarningMessage2(msg):
     res = APP_SETTINGS_SCALED_ICONS_RESOLUTION
     msgBox.setIconPixmap(QtGui.QPixmap('res/information.png').scaled(res,res))
     return msgBox.exec_()
-
 
 def toolkit_ShowCriticalMessage(msg):
     msgBox = QMessageBox()
@@ -136,10 +134,10 @@ def toolkit_new_item(table_widget, iRow, iCol, sText):
 class DoctorTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
         QtGui.QTableView.__init__(self, *args, **kwargs)
-
 class ActTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
         QtGui.QTableView.__init__(self, *args, **kwargs)
+
 
 class DoctorTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, myListOfDoctors, *args):
@@ -202,10 +200,7 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
         self.layoutChanged.emit()
 
     def flags(self, index):
-        # if (index.column() == COL_ACTPAID):
-            # return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
-        return QtCore.Qt.ItemIsEnabled
-
+        return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
 class ActTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, myListOfDentalActs, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
@@ -398,6 +393,7 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         
         if not index.isValid(): 
             return None
+        
         elif role == QtCore.Qt.DisplayRole:
             if iCol < 0 or iCol > self.columnCount(None): return None
             # `__getitem__` used also by "sorted"
@@ -407,16 +403,12 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
                 return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
             else: 
                 return val
-
-
         # elif role == QtCore.Qt.BackgroundRole:
         #     iPaid = dentalActAtRow.__getitem__(COL_ACTPAID)
         #     if(iPaid == 1): 
         #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.blue)
         #     else:
         #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.white)
-
-
 
     def headerData(self, col, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
@@ -449,12 +441,12 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
             if iCol < 0 or iCol > self.columnCount(None): 
                 return None
             elif iCol == COL_ACTDATE:
-                if value == "": value = self.data(index)
+                # if value == "": value = self.data(index)
                 dentalAct.SetVarDate(value)
             elif iCol == COL_ACTTYPE:
                 dentalAct.SetVarType(value, self.defaultPrices[value])
             elif iCol == COL_ACTUNITPRICE:
-                if value == "": value = self.data(index)
+                # if value == "": value = self.data(index)
                 dentalAct.SetVarUnitPrice(value)
             elif iCol == COL_ACTQTY: 
                 dentalAct.SetVarQty(value)
@@ -468,16 +460,110 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         return False
 
     def flags(self, index):
-        # QtCore.Qt.ItemIsSelectable
-        # QtCore.Qt.ItemIsEditable
-        # QtCore.Qt.ItemIsEnabled
         if index.column in [ COL_ACTSUBTOTAL, COL_ACTDATE] :
             return QtCore.Qt.NoItemFlags
         else: 
-            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
+            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable  
+
+class DoctorTableModelNew(QtCore.QAbstractTableModel):
+    def __init__(self, parent, *args):
+        QtCore.QAbstractTableModel.__init__(self, parent, *args)
+
+        self.database = parent.ParsedDentalDatabase
+        self.doctorID = -1
+        self.mylist = self.database.GetListDoctors()
+        self.bUpToDate = True
+
+        headerColumns = dict() 
+        headerColumns[COL_DRFIRSTNAME] = 'First Name'
+        headerColumns[COL_DRLASTNAME] = 'Last Name'
+        headerColumns[COL_DRPHONE] = 'Phone Number'
+        self.header = headerColumns.values()
+
+    # ***************************************************
+    def IsUpToDate(self):
+        """ return boolean to check if user changed values """
+        return self.bUpToDate
+    # ***************************************************
+
+    def rowCount(self, parent):
+        return len(self.mylist)
+    
+    def columnCount(self, parent):
+        if len(self.mylist) == 0: 
+            return len(self.header)
+        else:
+            return len(self.mylist[0])
+    
+    def data(self, index, role = QtCore.Qt.DisplayRole):
+        iRow = index.row()
+        iCol = index.column()
+        dentalDoctor = self.mylist[iRow]
         
+        if not index.isValid(): 
+            return None
+        elif role == QtCore.Qt.DisplayRole:
+            if iCol < 0 or iCol > self.columnCount(None): return None
+            val = dentalDoctor.__getitem__(iCol)
+            if iCol == COL_DRFIRSTNAME:
+                return self.FormatFirstName(val)  
+            if iCol == COL_DRLASTNAME:
+                return val.upper()
+            if iCol == COL_DRPHONE:
+                return self.FormatPhoneNumber(val)
+            return val
+
+    def FormatFirstName(self, sVal):
+        return sVal[0].upper() + sVal[1:].lower()
+
+    def FormatPhoneNumber(self, sVal):
+        if len(sVal) != 8 : return "UNDEFINED"
+        if APP_SETTINGS_PHONE_FORMAT == APP_SETTINGS_PHONE_OPTION1:
+            return APP_SETTINGS_PHONE_OPTION1.format(sVal[0:2],sVal[2:5],sVal[5:8])
+        if APP_SETTINGS_PHONE_FORMAT == APP_SETTINGS_PHONE_OPTION1:
+            return APP_SETTINGS_PHONE_OPTION2.format(sVal[0:2],sVal[2:4],sVal[4:6],sVal[6:8])
 
 
+    def headerData(self, col, orientation, role):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            return self.header[col]
+        return None
+
+    def sort(self, col, order):
+        """sort table by given column number col"""
+        self.layoutAboutToBeChanged.emit()
+        """
+        IMPORTANT: itemgetter is needed to determine a value at position
+        it only works with standard containers unless i reimplement the 
+        method __getitem__
+        """
+        self.mylist = sorted(self.mylist, key=operator.itemgetter(col))
+        if order == QtCore.Qt.DescendingOrder: self.mylist.reverse()
+        self.layoutChanged.emit()
+   
+    def setData(self, index, value, role=QtCore.Qt.DisplayRole):
+        if(role == QtCore.Qt.EditRole):
+            iRow = index.row()
+            iCol = index.column()            
+            dentalDoctor = self.mylist[iRow]
+            self.bUpToDate = False
+
+            if iCol < 0 or iCol > self.columnCount(None): 
+                return None
+            elif iCol == COL_DRFIRSTNAME:
+                dentalAct.SetVarFirstname(value)
+            elif iCol == COL_DRLASTNAME:
+                dentalAct.SetVarLastname(value)
+            elif iCol == COL_DRPHONE:
+                dentalAct.SetVarPhone(value)
+
+            self.dataChanged.emit(index, index)
+            return True
+        return False
+
+    def flags(self, index):
+        return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
+        
 
 class ComboDelegate(QtGui.QItemDelegate):
     """
@@ -524,7 +610,6 @@ class ComboDelegate(QtGui.QItemDelegate):
 
     def currentIndexChanged(self):
         self.commitData.emit(self.sender())
-
 class SpinBoxDelegate(QtGui.QItemDelegate):
     def createEditor(self, parent, option, index):
         spinBox = QtGui.QSpinBox(parent)
@@ -544,7 +629,6 @@ class SpinBoxDelegate(QtGui.QItemDelegate):
   
     def updateEditorGeometry(self, editor, option, index):
         editor.setGeometry(option.rect)
-  
 class CheckBoxDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None):
         QtGui.QStyledItemDelegate.__init__(self, parent)
@@ -593,8 +677,6 @@ class CheckBoxDelegate(QtGui.QStyledItemDelegate):
                              option.rect.height() / 2 -
                              check_box_rect.height() / 2)
         return QtCore.QRect(check_box_point, check_box_rect.size())       
-
-
 class DentalActDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None, argItemsList = []):
         QtGui.QStyledItemDelegate.__init__(self, parent)

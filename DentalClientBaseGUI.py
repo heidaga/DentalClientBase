@@ -31,7 +31,6 @@ this modified database ... ??
 """
 
 
-
  ### ***********  OPTIONS  ***********
 
 APP_SETTINGS = os.path.join(APP_DIR, APP_RESOURCES, "settings.ini")
@@ -280,6 +279,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         p.setColor(self.backgroundRole(), QColor(255,255,255))
         self.setPalette(p)
 
+        sFont = APP_SETTINGS_FONT
+        iFontSize = APP_SETTINGS_FONTSIZE
+        font = QtGui.QFont(sFont, iFontSize)
+        font.setStyleStrategy(QtGui.QFont.PreferAntialias)
+        self.setFont(font)
+
         # Increase the priority for the UI thread to ensure responsiveness
         QtCore.QThread.currentThread().Priority(QtCore.QThread.HighPriority)
        
@@ -294,7 +299,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_RemoveDoctor.clicked.connect(self.OnRemoveDoctor)
         self.ui.PB_AddAct.clicked.connect(self.OnAddAct)
         self.ui.PB_RemoveAct.clicked.connect(self.OnRemoveAct)
-        self.ui.m_tableclients.doubleClicked.connect(self.OnDoubleClickClient)
+        # self.ui.m_tableclients.doubleClicked.connect(self.OnActivateClient)
+        self.ui.m_tableclients.clicked.connect(self.OnActivateClient)
 
         date = time.strftime("%d/%m/%Y")
         stime = time.strftime("%H:%M")
@@ -304,16 +310,13 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.winsettings = GeneralSettings(self)
 
         list_doctors = []
-        # list_acts_first_doctor = []
         self.DefaultActsDict = self.winsettings.GetDefaultActs()
         self.ParsedDentalDatabase = self.winsettings.GetDoctorsActs() 
         if type(self.ParsedDentalDatabase) == TYPE_DENTAL_DATABASE:
             if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
                 list_doctors = self.ParsedDentalDatabase.GetListDoctors()
-                # first_doctor = list_doctors[0]
-                # list_acts_first_doctor = self.ParsedDentalDatabase.GetListActsByDoctorID(first_doctor.id())
 
-        self.TableModelDoctors = DoctorTableModel(self, list_doctors)
+        self.TableModelDoctors = DoctorTableModelNew(self)
         self.TableModelActs = ActTableModelNew(self)
 
         # TABLE VIEW : DOCTORS
@@ -321,18 +324,17 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.setModel(self.TableModelDoctors)
         table_view.setShowGrid(False)
         table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        # table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked
-        #                           | QtGui.QAbstractItemView.SelectedClicked)
-
+        table_view.setEditTriggers( QtGui.QAbstractItemView.SelectedClicked ) # DoubleClicked
+                                    
         sFont = APP_SETTINGS_TABLE_DOCTORS_FONT
         iFontSize = APP_SETTINGS_TABLE_DOCTORS_FONTSIZE
         font = QtGui.QFont(sFont, iFontSize) #, QtGui.QFont.Bold
         table_view.setFont(font)
         # set column width to fit contents (set font first!)
-        table_view.resizeColumnsToContents()
-        table_view.resizeRowsToContents()
         hh = table_view.horizontalHeader()
         hh.setStretchLastSection(True)
+        table_view.resizeColumnsToContents()
+        table_view.resizeRowsToContents()
         # enable sorting
         table_view.setSortingEnabled(True)
         
@@ -340,32 +342,23 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view = self.ui.m_tableacts
         table_view.setModel(self.TableModelActs)
         # table_view.setEditTriggers( QtGui.QAbstractItemView.NoEditTriggers )
-        table_view.setDragDropOverwriteMode(True)
-        # table_view.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
-        # table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
-        table_view.setTextElideMode(QtCore.Qt.ElideNone)
+        table_view.setDragDropOverwriteMode(False)
+        table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
+        # table_view.setTextElideMode(QtCore.Qt.ElideNone)
         table_view.setShowGrid(False)
         sFont = APP_SETTINGS_TABLE_ACTS_FONT
         iFontSize = APP_SETTINGS_TABLE_ACTS_FONTSIZE
         font = QtGui.QFont(sFont, iFontSize) #, QtGui.QFont.Bold
         table_view.setFont(font)
         # set column width to fit contents (set font first!)
-        table_view.resizeColumnsToContents()
-        table_view.resizeRowsToContents()
         hh = table_view.horizontalHeader()
         hh.setStretchLastSection(True)
+        table_view.resizeColumnsToContents()
+        table_view.resizeRowsToContents()
         # enable sorting
         table_view.setSortingEnabled(True)        
-        # Set delegates (AND DONT FORGET TO CHECK FLAGS SET BY MODEL)
-        # http://stackoverflow.com/a/27256558/2192115
-        # qDelegateSpinBox = SpinBoxDelegate(table_view)
-        # qDelegateDate = DateItemDelegate(table_view)
-        # qDelegateCheckbox = CheckBoxDelegate(table_view)
-        # qDelegateCombobox = ComboDelegate(table_view, self.DefaultActsDict.keys())
-        # table_view.setItemDelegateForColumn(COL_ACTQTY, qDelegateSpinBox)
-        # table_view.setItemDelegateForColumn(COL_ACTDATE, qDelegateDate)
-        # table_view.setItemDelegateForColumn(COL_ACTPAID, qDelegateCheckbox)
-        # table_view.setItemDelegateForColumn(COL_ACTTYPE, qDelegateCombobox)
+        # Set delegates
         qDelegateAct = DentalActDelegate(table_view, self.DefaultActsDict.keys())
         table_view.setItemDelegate(qDelegateAct)
 # 
@@ -508,7 +501,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
         return 0
 
-    def OnDoubleClickClient(self, qIndex):
+    def OnActivateClient(self, qIndex):
         """ Visualise/edit database of acts for the selected doctor
             Used with a "doubleClicked" signal fired from QTableView
         """
@@ -524,20 +517,13 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         sLastname = table_model_doctors.index(iRow, COL_DRLASTNAME).data()
         sPhone = table_model_doctors.index(iRow, COL_DRPHONE).data()
         hash_id = HashClientID(sFirstname,sLastname,sPhone)
-        
-        # Obsolete if using ActTableModelNew
-        # ListActs = self.ParsedDentalDatabase.GetListActsByDoctorID(hash_id)
-        # table_model_acts.load_from_list(ListActs)
         table_model_acts.SetModelForDoctorByID(hash_id)
         table_view.setModel(table_model_acts)
 
         table_view.resizeColumnsToContents()
         table_view.resizeRowsToContents()
-
-        # for iCol in range(table_model_doctors.columnCount(None)):
-        #     itemToChange = table_model_doctors.index(iRow, iCol)
-        #     brush = QtGui.QBrush(QtCore.Qt.darkBlue)
-        #     itemToChange.data(brush, QtCore.Qt.ForegroundRole)
+        hh = table_view.horizontalHeader()
+        hh.setStretchLastSection(True)
 
         return 0
 
@@ -549,13 +535,3 @@ if __name__ == '__main__':
     window.show()
     window.setStyleSheet(APP_SETTINGS_COLOR_TABLE)
     sys.exit(app.exec_())
-
-
-
-# AUTOCOMPLETE SUBLIME
-# COL_ACTDATE         = 0
-# COL_ACTTYPE         = 1
-# COL_ACTUNITPRICE    = 2
-# COL_ACTQTY          = 3
-# COL_ACTSUBTOTAL     = 4
-# COL_ACTPAID         = 5 
