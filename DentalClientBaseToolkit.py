@@ -18,6 +18,9 @@ import operator
 import hashlib
 import sys
 
+# Non open to user modification
+APP_SETTINGS_ACTDATE_FORMAT_DATABASE = "dd/MM/yyyy"
+
 # ***********************************************************************
 # ***********************************************************************
 # ***********************************************************************
@@ -206,7 +209,7 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
 class ActTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, myListOfDentalActs, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
-        self.mylist = [(QtCore.QDateTime.fromString(jAct.Date, "ddmmyyyy"), 
+        self.mylist = [(QtCore.QDate.fromString(jAct.Date, APP_SETTINGS_ACTDATE_FORMAT_DATABASE), 
                         jAct.Type, 
                         jAct.UnitPrice, 
                         jAct.Qty, 
@@ -222,7 +225,7 @@ class ActTableModel(QtCore.QAbstractTableModel):
         # COL_ACTPAID         = 5
     
     def load_from_list(self, myListOfDentalActs):
-        self.mylist = [(QtCore.QDateTime.fromString(jAct.Date, "ddmmyyyy"), 
+        self.mylist = [(QtCore.QDate.fromString(jAct.Date, APP_SETTINGS_ACTDATE_FORMAT_DATABASE), 
                         jAct.Type, 
                         jAct.UnitPrice, 
                         jAct.Qty, 
@@ -278,7 +281,7 @@ class ActTableModel(QtCore.QAbstractTableModel):
     def addAct(self):
         # self.emit(SIGNAL("layoutAboutToBeChanged()"))
         self.layoutAboutToBeChanged.emit()
-        qDate = QtCore.QDateTime.currentDateTime()
+        qDate = QtCore.QDate.currentDate()
         self.mylist.append([qDate,"",0,0,0,1])
         # self.emit(SIGNAL("layoutChanged()"))
         self.layoutChanged.emit()
@@ -392,24 +395,26 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         iRow = index.row()
         iCol = index.column()
         dentalActAtRow = self.mylist[iRow]
-        if not index.isValid(): return None
-        elif role == QtCore.Qt.DisplayRole:
-            if iCol < 0 or iCol > self.columnCount(None): 
-                return None
-            
-            val = dentalActAtRow.__getitem__(iCol) # used also by "sorted"
-            # special formatting when displaying dates
-            if iCol == COL_ACTDATE: 
-                return QtCore.QDateTime.fromString(val, "ddmmyyyy")
-            else:
-                return val
         
-        elif role == QtCore.Qt.BackgroundRole:
-            iPaid = dentalActAtRow.__getitem__(COL_ACTPAID)
-            if(iPaid == 1): 
-                background = QtGui.QBrush(QtCore.Qt.GlobalColor.blue)
-            else:
-                background = QtGui.QBrush(QtCore.Qt.GlobalColor.white)
+        if not index.isValid(): 
+            return None
+        elif role == QtCore.Qt.DisplayRole:
+            if iCol < 0 or iCol > self.columnCount(None): return None
+            # `__getitem__` used also by "sorted"
+            val = dentalActAtRow.__getitem__(iCol)
+            if iCol == COL_ACTDATE: 
+                qDate = QtCore.QDate.fromString(val, APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
+                return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            else: 
+                return val
+
+
+        # elif role == QtCore.Qt.BackgroundRole:
+        #     iPaid = dentalActAtRow.__getitem__(COL_ACTPAID)
+        #     if(iPaid == 1): 
+        #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.blue)
+        #     else:
+        #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.white)
 
 
 
@@ -438,28 +443,25 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         if(role == QtCore.Qt.EditRole):
             iRow = index.row()
             iCol = index.column()            
-            dentalActAtRow = self.mylist[iRow]
+            dentalAct = self.mylist[iRow]
             self.bUpToDate = False
-            # self.SetDentalActDetail(dentalActAtRow, iCol, value)
 
-            jAct = dentalActAtRow
             if iCol < 0 or iCol > self.columnCount(None): 
                 return None
             elif iCol == COL_ACTDATE:
-                # sDate = QtCore.QDateTime.FromString(value, "ddmmyyyy") 
-                # jAct.SetVarDate(QtCore.QDateTime.toString(sDate, "ddmmyyyy"))
-                jAct.SetVarDate(value)
+                if value == "": value = self.data(index)
+                dentalAct.SetVarDate(value)
             elif iCol == COL_ACTTYPE:
-                jAct.SetVarType(value, self.defaultPrices[value])
+                dentalAct.SetVarType(value, self.defaultPrices[value])
             elif iCol == COL_ACTUNITPRICE:
                 if value == "": value = self.data(index)
-                jAct.SetVarUnitPrice(value)
+                dentalAct.SetVarUnitPrice(value)
             elif iCol == COL_ACTQTY: 
-                jAct.SetVarQty(value)
+                dentalAct.SetVarQty(value)
             elif iCol == COL_ACTSUBTOTAL: 
                 return False 
             elif iCol == COL_ACTPAID: 
-                jAct.SetVarPaid(value)
+                dentalAct.SetVarPaid(value)
 
             self.dataChanged.emit(index, index)
             return True
@@ -505,22 +507,20 @@ class ComboDelegate(QtGui.QItemDelegate):
         return combo
 
     def setEditorData(self, comboBox, index):
-        # comboBox.blockSignals(True)
-        # TODO Check APP_SETTINGS_ALLOW_CUSTOM_ACTTYPE
         sComboText = index.model().data(index).upper()
         itemID = comboBox.findText(sComboText)
-        # print ">>> ComboDelegate sComboText", sComboText 
-        # print ">>> ComboDelegate itemID", itemID 
         comboBox.setCurrentIndex(itemID)
-        # comboBox.setItemText(int(index.model().data(index)))
         # comboBox.blockSignals(False)
 
     def setModelData(self, comboBox, model, index):
         sMsg = "Changing the type of act will remove the current unit price.\n"
         sMsg += "Proceed ?"
-        ret = toolkit_ShowWarningMessage2(sMsg)
-        if(ret == QMessageBox.Ok):
-            model.setData(index, comboBox.currentText().upper(), QtCore.Qt.EditRole)
+        sComboText = comboBox.currentText().upper()
+        sOldText = index.model().data(index).upper()
+        if sComboText != sOldText:
+            ret = toolkit_ShowWarningMessage2(sMsg)
+            if(ret == QMessageBox.Ok):
+                model.setData(index, sComboText, QtCore.Qt.EditRole)
 
     def currentIndexChanged(self):
         self.commitData.emit(self.sender())
@@ -594,14 +594,76 @@ class CheckBoxDelegate(QtGui.QStyledItemDelegate):
                              check_box_rect.height() / 2)
         return QtCore.QRect(check_box_point, check_box_rect.size())       
 
-class DateItemDelegate(QtGui.QStyledItemDelegate):
-    def __init__(self, parent = None):
-        QtGui.QStyledItemDelegate.__init__(self, parent) 
-    def displayText(self, value, locale):
-        if value == "": 
-            QtCore.QDate.currentDate().toString("dd/MM/yyyy")
-        return value.toString("dd/MM/yyyy")
+
+class DentalActDelegate(QtGui.QStyledItemDelegate):
+    def __init__(self, parent = None, argItemsList = []):
+        QtGui.QStyledItemDelegate.__init__(self, parent)
+        self.list_of_default_acts = list(argItemsList)
+
+    def createEditor(self, parent, option, index):
+        iCol = index.column()
+        if(iCol == COL_ACTUNITPRICE):
+            editor = QtGui.QLineEdit(parent)
+            return editor            
+        elif(iCol == COL_ACTDATE):
+            editor = QtGui.QDateEdit(parent)
+            editor.setDisplayFormat(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            editor.setCalendarPopup(True)
+            return editor
+        elif iCol == COL_ACTQTY:
+            editor = QtGui.QSpinBox(parent)
+            editor.setMinimum(0)
+            editor.setMaximum(50)  
+            return editor
+        elif iCol == COL_ACTTYPE:
+            editor = QtGui.QComboBox(parent)
+            editor.setEditable(False)
+            editor.addItems(self.list_of_default_acts)
+            return editor
+
+    def setEditorData(self, editor, index):
+        # iCol = index.column()
+        if editor.metaObject().className() == "QLineEdit":
+            fVal = index.model().data(index, QtCore.Qt.DisplayRole)
+            editor.setText(str(fVal))
+
+        elif editor.metaObject().className() == "QDateEdit":
+            sDate = index.model().data(index, QtCore.Qt.DisplayRole)
+            qDate = QtCore.QDate.fromString(sDate, APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            editor.setDate(qDate)
+
+        elif editor.metaObject().className() == "QSpinBox":
+            value = index.model().data(index, QtCore.Qt.DisplayRole)
+            editor.setValue(value)
+
+        elif editor.metaObject().className() == "QComboBox":
+            sComboText = index.model().data(index, QtCore.Qt.DisplayRole).upper()
+            itemID = editor.findText(sComboText)
+            editor.setCurrentIndex(itemID)
+
+  
+    def setModelData(self, editor, model, index):
+                
+        if editor.metaObject().className() == "QLineEdit":
+            model.setData(index, editor.text(), QtCore.Qt.EditRole)
+            
+        elif editor.metaObject().className() == "QDateEdit":
+            model.setData(index, editor.date().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE), QtCore.Qt.EditRole)
         
+        elif editor.metaObject().className() == "QSpinBox":
+            editor.interpretText()
+            model.setData(index, editor.value(), QtCore.Qt.EditRole)
+
+        elif editor.metaObject().className() == "QComboBox":
+            sComboText = editor.currentText().upper()
+            sModelText = index.model().data(index).upper()
+            if sComboText != sModelText:
+                sMsg = "Changing the type of act will remove the current unit price.\n"
+                sMsg += "Do you want to proceed ?"
+                ret = toolkit_ShowWarningMessage2(sMsg)
+                if(ret == QMessageBox.Ok):
+                    model.setData(index, sComboText, QtCore.Qt.EditRole)
+
 
 """
 This enum describes the properties of an item:

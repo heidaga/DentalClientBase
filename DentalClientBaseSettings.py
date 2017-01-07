@@ -7,13 +7,14 @@ APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
 APP_RESOURCES = "res"
 APP_DIR = os.getcwd()
-APP_SETTINGS = os.path.join(APP_DIR, APP_RESOURCES, "settings.ini")
+APP_LOGO_NAME = "logonew_tr.png"
+APP_BANNER_NAME = "banner_tr.png"
 
 APP_SETTINGS_COLOR_TABLE ="""
 QTableView 
 { 
-	selection-background-color: #800000FF; 
-	selection-color: yellow; 
+	selection-background-color: #e6ecff; 
+	selection-color: black; 
 }
 """
 
@@ -42,8 +43,8 @@ COL_ACTQTY          = 3
 COL_ACTSUBTOTAL     = 4
 COL_ACTPAID         = 5 
 
-# If this option is on, user can load
-# APP_SETTINGS_ALLOW_CUSTOM_ACTTYPE = False
+# Date format for each act
+APP_SETTINGS_ACTDATE_FORMAT_DISPLAY = "dd/MMMM/yyyy"
 
 #########################
 # TABLE- DEFAULT ACTS

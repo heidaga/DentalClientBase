@@ -219,19 +219,19 @@ if __name__ == '__main__':
 		
 		MyDatabase = DentalDatabase()
 		
-		id1 = MyDatabase.AddDoctor("Samir", "Kassir", "0378936")
-		id2 = MyDatabase.AddDoctor("Khalil", "Gebran", "71555444")
-		id3 = MyDatabase.AddDoctor("Alaa", "Zalzali", "70885146")
+		id1 = MyDatabase.AddDoctor("Samir", "Kassir", "03 - 789 366")
+		id2 = MyDatabase.AddDoctor("Khalil", "Gebran", "71 - 555 444")
+		id3 = MyDatabase.AddDoctor("Alaa", "Zalzali", "70 - 885 146")
 		 
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05022015", "CERAMIC", 2, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25032015", "FULL-DENTURE", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25032015", "CCM", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01112016", "CERAMIC", 1, 12)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "08122016", "FULL-DENTURE", 4, 37)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20122016", "CERAMIC", 1, 50)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22122016", "CCM", 6, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22122016", "FM", 6, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "28122016", "FULL-DENTURE", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05/02/2015", "CERAMIC", 2, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "FULL-DENTURE", 10, 6.5)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "CCM", 10, 6.5)
+		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01/11/2016", "CERAMIC", 1, 12)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "08/12/2016", "FULL-DENTURE", 4, 37)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20/12/2016", "CERAMIC", 1, 50)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "CCM", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "FM", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "28/12/2016", "FULL-DENTURE", 6, 10)
 		 
 		pkl_save(MyDatabase  , DB_CLIENTS_AND_ACTS)
 

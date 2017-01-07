@@ -22,21 +22,33 @@ from DentalClientBaseSettings import *
 import time
 import numpy as np
 import cPickle as pickle
+"""
+# TODOs
+
+* initialise database from settings, then copy it to temporary folder
+on leaving application, confirm if user wants to save work, if yes copy from temporary folder
+this modified database ... ??
+"""
+
 
 
  ### ***********  OPTIONS  ***********
-verbose     = False
+
+APP_SETTINGS = os.path.join(APP_DIR, APP_RESOURCES, "settings.ini")
+APP_LOGO_PATH = os.path.join(APP_DIR, APP_RESOURCES, APP_LOGO_NAME)
+APP_BANNER_PATH = os.path.join(APP_DIR, APP_RESOURCES, APP_BANNER_NAME)
+verbose = False
 # =======================================================================
 
 class GeneralSettings(QtGui.QMainWindow):
-    """ Open Qt window containing all the acts for a given client """
+    """ Openv window containing all the acts for a given client """
 
     def __init__(self, parent=None):
     	super(GeneralSettings, self).__init__(parent)
 
     	self.ui = ui_windowsettings.Ui_AppCentralWidget()
     	self.ui.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('res/logo.ico'))
+        self.setWindowIcon(QtGui.QIcon(APP_LOGO_PATH))
         self.setWindowTitle("General Settings")
         
         # Background Color hotfix for central UI widget 
@@ -85,7 +97,7 @@ class GeneralSettings(QtGui.QMainWindow):
                     line = fo.readline()
                     if not line: break
                     db = line.strip().split("=")
-                    print db
+                    if verbose: print ">>> database", db
                     if db[0].strip() == "Database_DefaultActs":
                         self.DefaultActsDatabasePath = db[1].strip() 
                     elif db[0].strip() == "Database_DoctorsActs":    
@@ -140,7 +152,7 @@ class GeneralSettings(QtGui.QMainWindow):
             filename = dialog.selectedFiles()[0]
         if filename == None: return 0
         
-        print "filename = ", filename
+        # print "filename = ", filename
         if(self.sender() == self.ui.PB_LoadDatabaseDefaultActs):
             self.DefaultActsDatabasePath = filename
             self.ui.mLE_DatabaseDefaultActs.setText(self.DefaultActsDatabasePath)
@@ -258,8 +270,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     	self.ui = ui_windowmain.Ui_AppCentralWidget()
     	self.ui.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('res/logo.ico'))
+        self.setWindowIcon(QtGui.QIcon(APP_LOGO_PATH))
         self.setWindowTitle(APP_NAME+" "+APP_LICENSE)
+        self.ui.banner.setIcon(QtGui.QIcon(APP_BANNER_PATH))
         
         # Background Color hotfix for central UI widget 
         # (coz not responding to stylesheet in UI)
@@ -345,14 +358,16 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.setSortingEnabled(True)        
         # Set delegates (AND DONT FORGET TO CHECK FLAGS SET BY MODEL)
         # http://stackoverflow.com/a/27256558/2192115
-        qDelegateSpinBox = SpinBoxDelegate(table_view)
-        qDelegateDate = DateItemDelegate(table_view)
-        qDelegateCheckbox = CheckBoxDelegate(table_view)
-        qDelegateCombobox = ComboDelegate(table_view, self.DefaultActsDict.keys())
-        table_view.setItemDelegateForColumn(COL_ACTQTY, qDelegateSpinBox)
-        table_view.setItemDelegateForColumn(COL_ACTDATE, qDelegateDate)
-        table_view.setItemDelegateForColumn(COL_ACTPAID, qDelegateCheckbox)
-        table_view.setItemDelegateForColumn(COL_ACTTYPE, qDelegateCombobox)
+        # qDelegateSpinBox = SpinBoxDelegate(table_view)
+        # qDelegateDate = DateItemDelegate(table_view)
+        # qDelegateCheckbox = CheckBoxDelegate(table_view)
+        # qDelegateCombobox = ComboDelegate(table_view, self.DefaultActsDict.keys())
+        # table_view.setItemDelegateForColumn(COL_ACTQTY, qDelegateSpinBox)
+        # table_view.setItemDelegateForColumn(COL_ACTDATE, qDelegateDate)
+        # table_view.setItemDelegateForColumn(COL_ACTPAID, qDelegateCheckbox)
+        # table_view.setItemDelegateForColumn(COL_ACTTYPE, qDelegateCombobox)
+        qDelegateAct = DentalActDelegate(table_view, self.DefaultActsDict.keys())
+        table_view.setItemDelegate(qDelegateAct)
 # 
     # ********************************************************************************
 
@@ -489,7 +504,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         sSurname = self.ui.m_tableclients.item(iRow,1).text()
         if sName == "" or sSurname == "" : return 0
         else:
-           print "Selected doctor: ", sName, sSurname
+           if verbose: print "Selected doctor: ", sName, sSurname
 
         return 0
 
