@@ -74,12 +74,12 @@ def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
         s+= "    <tr>\n"
     elif mode == 2:
         s+= "    <tr class=\"item\">\n"
-    s+= "      <th>Act #{0}</th>\n".format(iID)
-    s+= "      <td>{0}</td>\n".format(Act.__getitem__(COL_ACTDATE))
-    s+= "      <td>{0}</td>\n".format(Act.__getitem__(COL_ACTTYPE))
-    s+= "      <td>{0}</td>\n".format(Act.__getitem__(COL_ACTUNITPRICE))
-    s+= "      <td>{0}</td>\n".format(Act.__getitem__(COL_ACTQTY))
-    s+= "      <td>{0}</td>\n".format(Act.__getitem__(COL_ACTSUBTOTAL))
+    s+= "      <td>Act #{0}</td>\n".format(iID)
+    s+= "      <td class=\"service\">{0}</td>\n".format(Act.__getitem__(COL_ACTDATE))
+    s+= "      <td class=\"desc\">{0}</td>\n".format(Act.__getitem__(COL_ACTTYPE))
+    s+= "      <td class=\"unit\">{0}</td>\n".format(Act.__getitem__(COL_ACTUNITPRICE))
+    s+= "      <td class=\"qty\">{0}</td>\n".format(Act.__getitem__(COL_ACTQTY))
+    s+= "      <td class=\"total\">{0}</td>\n".format(Act.__getitem__(COL_ACTSUBTOTAL))
     s+= "    </tr>\n"
     return s
 
@@ -107,7 +107,7 @@ def to_html_actheaders(sHeaderList, mode = 1):
 
 def to_html_acts_header_and_details(sHeaderList, listOfDentalActInstances, mode = 1):
     s = str()
-    s+= "<table border=\"1\" class=\"dataframe\">\n"
+    s+= "<table>\n"
     s+= to_html_actheaders(sHeaderList, mode)
     s+= "  <tbody>\n"
     s+= to_html_actdetails(listOfDentalActInstances, mode)
@@ -191,10 +191,10 @@ if __name__ == "__main__":
 
         sOutputFname = "index_parsed_stylesheet_{0}".format(css_style)    
 
-        with open(sOutputFname+".html", "w") as text_file:
+        with open(os.path.join(sFolderPath,sOutputFname+".html"), "w") as text_file:
             text_file.write("{0}".format(sHtmlContent))
 
-        HTML(string=sHtmlContent).write_pdf(sOutputFname+".pdf", stylesheets=[sHtmlCSSPath])
+        # HTML(string=sHtmlContent).write_pdf(sOutputFname+".pdf", stylesheets=[sHtmlCSSPath])
 
     test()
 

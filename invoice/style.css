@@ -16,10 +16,14 @@ body {
   margin: 0 auto; 
   color: #001028;
   background: #FFFFFF; 
-  font-family: Arial, sans-serif; 
-  font-size: 12px; 
-  font-family: Arial;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  font-size: 12px;
 }
+
+font-size: 75%;
+  color: #222;
+  background: #fff;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 
 header {
   padding: 10px 0;
@@ -52,15 +56,18 @@ h1 {
   color: #5D6975;
   font-weight: bold;
   text-align: right;
-  font-size: 16px; 
+  font-size: 18px; 
 }
 
 #project {
   float: left;
+  font-size: 14px; 
+  margin-bottom: 25px;
 }
 
 #project span {
   color: #5D6975;
+  padding-bottom: 5px;
   text-align: right;
   width: 52px;
   margin-right: 10px;
@@ -83,44 +90,52 @@ table {
   border-collapse: collapse;
   border-spacing: 0;
   margin-bottom: 20px;
+  vertical-align: center;
 }
 
-table tr:nth-child(2n-1) td {
+
+table tr:hover td{
+  background-color: #e6f2ff !important;
+}
+table tr:nth-child(odd) td{
   background: #F5F5F5;
+}
+table tr:nth-child(even) td{
+  background: #FFFFFF;
 }
 
 table th,
 table td {
-  text-align: center;
+  text-align: left;
 }
 
 table th {
-  padding: 5px 20px;
+  padding: 5px 5px;
   color: #5D6975;
-  border-bottom: 1px solid #C1CED9;
+  border-bottom: 3px solid #C1CED9;
   white-space: nowrap;        
-  font-weight: normal;
+  font-weight: bold;
+  text-align: left;
+  font-size: 16px;
 }
 
 table .service,
 table .desc {
   text-align: left;
+  vertical-align: center;
 }
 
 table td {
-  padding: 20px;
-  text-align: right;
-}
-
-table td.service,
-table td.desc {
-  vertical-align: top;
+  padding: 7px;
+  text-align: left;
 }
 
 table td.unit,
 table td.qty,
 table td.total {
   font-size: 1.2em;
+  font-style: normal;
+  text-align: center;
 }
 
 table td.grand {
