@@ -6,3 +6,4 @@ ui_*.py
 *_rc.py
 *.pdf
 *.html
+!index_template.html

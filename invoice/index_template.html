@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>INVOICE {{ tag_invoice_id }}</title>
+    <link rel="stylesheet" href="style.css" media="all" />
+  </head>
+  <body>
+    <header class="clearfix">
+      <div id="logo">
+        <img src="logo.png">
+      </div>
+      <h1>INVOICE {{ tag_invoice_id }}</h1>
+      <div id="company" class="clearfix">
+        Hussein FTOUNI Dental Lab<br>
+        Hadath, Greater Beirut<br>
+        Lebanon<br>
+        +961 (0)3 120 614<br>
+        <a href="mailto:hussein.ft@gmail.com">hussein.ft@gmail.com</a>
+      </div>
+      <div id="project">
+        <div><span>CLIENT</span> {{ tag_doctor_full_name }}</div>
+        <div><span>ADDRESS</span> {{ tag_doctor_address }}</div>
+        <div><span>EMAIL</span> <a href="mailto:{{ tag_doctor_email }}">{{ tag_doctor_email }}</a></div>
+        <div><span>DATE</span> {{ tag_actual_date }}</div>
+        <div><span>DUE DATE</span> {{ tag_due_date }}</div>
+      </div>
+    </header>
+    <main>
+	
+      {{ tag_acts_header_and_details }}  
+	  
+	<div>
+        <br>
+		<br>
+    </div>
+
+	
+	<table>
+        <thead>
+        </thead>
+        <tbody>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td id="totals">TOTAL ACTS</td>
+            <td id="totals">{{ tag_total_sum }}</td>
+          </tr>
+          <tr>
+		    <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td id="totals">PAIMENT RECEIVED</td>
+            <td id="totals">{{ tag_total_paid }}</td>
+          </tr>
+          <tr>
+		    <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td id="totals">REMAINING DUE</td>
+            <td id="totals">{{ tag_total_remaining }}</td>
+          </tr>
+        </tbody>
+      </table>
+	  
+	  
+	  
+      <div id="notices">
+        <div>NOTICE:</div>
+        <div class="notice">{{ tag_user_notice }}</div>
+      </div>
+    </main>
+    <footer>
+      Invoice was created by the application DentalClientBase<sup>&reg;</sup> and is valid without the signature and seal.
+    </footer>
+  </body>
+</html>
