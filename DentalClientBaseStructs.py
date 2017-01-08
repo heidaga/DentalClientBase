@@ -109,10 +109,7 @@ class DentalClient:
 		self.Address = address 		# string optional
 
 		self.acts = list()
-
-		assert fname != ""
-		assert sname != ""
-		assert sphone != ""
+		self.defaultprices = dict()
 
 	def __len__(self):
 		""" returns number of member variables to be used externally (by Qt) """
@@ -146,10 +143,15 @@ class DentalClient:
 	def SetVarPhone(self, sVal):
 		self.Phone = str(sVal)
 
-	""" ONLY FOR SORTING : acts as a getter 
+	""" 
+		ONLY FOR SORTING : acts as a getter 
 		To sort dates, i only return the date string
 		then the output value is Qt-formatted in the GUI class 
 	"""
+
+	def AssignDoctorPrices(self, dictOfDefaultPrices):
+		self.defaultprices = dict(dictOfDefaultPrices)
+		return
 
 	def __getitem__(self, iCol):
 		if iCol == COL_DRFIRSTNAME: 

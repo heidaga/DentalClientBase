@@ -15,6 +15,7 @@ from PySide.QtGui import QMessageBox
 # pyside-uic compiled files resulting from *.ui files
 import ui_windowmain
 import ui_windowsettings
+
 from DentalClientBaseStructs import *
 from DentalClientBaseToolkit import *
 from DentalClientBaseSettings import *
@@ -316,7 +317,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
                 list_doctors = self.ParsedDentalDatabase.GetListDoctors()
 
-        self.TableModelDoctors = DoctorTableModelNew(self)
+        # self.TableModelDoctors = DoctorTableModelNew(self)
+        self.TableModelDoctors = DoctorTableModel(self)
         self.TableModelActs = ActTableModelNew(self)
 
         # TABLE VIEW : DOCTORS

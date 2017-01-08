@@ -140,8 +140,10 @@ class ActTableView(QtGui.QTableView):
 
 
 class DoctorTableModel(QtCore.QAbstractTableModel):
-    def __init__(self, parent, myListOfDoctors, *args):
+    def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
+        self.database = parent.ParsedDentalDatabase
+        myListOfDoctors = self.database.GetListDoctors()
         self.mylist = [(jDoctor.Firstname, 
                         jDoctor.Surname, 
                         jDoctor.Phone) 
