@@ -7,7 +7,7 @@ http://pbpython.com/pdf-reports.html
 """
 # from __future__ import print_function
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
+# from weasyprint import HTML
 import pandas as pd
 import os
 
@@ -74,13 +74,26 @@ def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
         s+= "    <tr>\n"
     elif mode == 2:
         s+= "    <tr class=\"item\">\n"
+    
     s+= "      <td>Act #{0}</td>\n".format(iID)
-    s+= "      <td class=\"service\">{0}</td>\n".format(Act.__getitem__(COL_ACTDATE))
-    s+= "      <td class=\"desc\">{0}</td>\n".format(Act.__getitem__(COL_ACTTYPE))
-    s+= "      <td class=\"unit\">{0}</td>\n".format(Act.__getitem__(COL_ACTUNITPRICE))
-    s+= "      <td class=\"qty\">{0}</td>\n".format(Act.__getitem__(COL_ACTQTY))
-    s+= "      <td class=\"total\">{0}</td>\n".format(Act.__getitem__(COL_ACTSUBTOTAL))
-    s+= "    </tr>\n"
+    
+    for iHeader in ACTS_HEADER_DICT:
+        css_class = str()
+        sval = str()
+        if iHeader == COL_ACTDATE : css_class = " class=\"service\""
+        if iHeader == COL_ACTTYPE : css_class = " class=\"desc\""
+        if iHeader == COL_ACTUNITPRICE : css_class = " class=\"unit\""
+        if iHeader == COL_ACTQTY : css_class = " class=\"qty\""
+        if iHeader == COL_ACTSUBTOTAL : css_class = " class=\"total\""
+
+        val = Act.__getitem__(iHeader)
+        if iHeader in [COL_ACTUNITPRICE, COL_ACTSUBTOTAL]:
+            sval = format(val, INVOICE_FLOAT_FORMAT)
+        else:
+            sval = val 
+
+        s+= "      <td{0}>{1}</td>\n".format(css_class, sval)
+
     return s
 
 # modes 1/2 depend on which css using (check folders invoice and invoice2)
@@ -91,7 +104,7 @@ def to_html_actdetails(listOfDentalActInstances, mode = 1):
     return s
 
 # modes 1/2 depend on which css using (check folders invoice and invoice2)
-def to_html_actheaders(sHeaderList, mode = 1):
+def to_html_actheaders(mode = 1):
     s = str()
     s+= "  <thead>\n"
     if mode == 1:
@@ -99,16 +112,16 @@ def to_html_actheaders(sHeaderList, mode = 1):
     elif mode == 2:
         s+= "    <tr class=\"heading\">\n"
     s+= "      <th></th>\n"
-    for sHeader in sHeaderList:
-        s+= "      <th>{0}</th>\n".format(sHeader)
+    for iHeader in ACTS_HEADER_DICT:
+        s+= "      <th>{0}</th>\n".format(ACTS_HEADER_DICT[iHeader])
     s+= "    </tr>\n"
     s+= "  </thead>\n"
     return s
 
-def to_html_acts_header_and_details(sHeaderList, listOfDentalActInstances, mode = 1):
+def to_html_acts_header_and_details(listOfDentalActInstances, mode = 1):
     s = str()
     s+= "<table>\n"
-    s+= to_html_actheaders(sHeaderList, mode)
+    s+= to_html_actheaders(mode)
     s+= "  <tbody>\n"
     s+= to_html_actdetails(listOfDentalActInstances, mode)
     s+= "  </tbody>\n"
@@ -137,22 +150,14 @@ if __name__ == "__main__":
         for jAct in list_of_acts:
             fGrandTotal += jAct.SubTotal
 
-        headerColumns = dict() 
-        headerColumns[COL_ACTDATE] = 'Date'
-        headerColumns[COL_ACTTYPE] = 'Act type'
-        headerColumns[COL_ACTUNITPRICE] = 'Unit Price'
-        headerColumns[COL_ACTQTY] = 'Quantity'
-        headerColumns[COL_ACTSUBTOTAL] = 'SubTotal'
-        sHeaderList = headerColumns.values()
-
         # test the output on:
         # http://htmledit.squarefree.com/
         print "\n\n **********************"
 
         css_style = 1
-        act_headers_and_details = to_html_acts_header_and_details(sHeaderList, list_of_acts, css_style)
-        act_headers = to_html_actheaders(sHeaderList, css_style)
-        act_details = to_html_actdetails(list_of_acts, css_style)
+        act_headers_and_details = to_html_acts_header_and_details(list_of_acts, css_style)
+        # act_headers = to_html_actheaders(sHeaderList, css_style)
+        # act_details = to_html_actdetails(list_of_acts, css_style)
 
         sHtmlTemplatePath = str()
         sHtmlCSSPath = str()
@@ -161,10 +166,10 @@ if __name__ == "__main__":
             sFolderPath = "invoice"
             sHtmlTemplatePath = "index_template.html"
             sHtmlCSSPath = os.path.join(sFolderPath, "style.css")
-        elif css_style == 2:
-            sFolderPath = "invoice2"
-            sHtmlTemplatePath = "index_template2.html"
-            sHtmlCSSPath = os.path.join(sFolderPath, "style.css")
+        # elif css_style == 2:
+        #     sFolderPath = "invoice2"
+        #     sHtmlTemplatePath = "index_template2.html"
+        #     sHtmlCSSPath = os.path.join(sFolderPath, "style.css")
 
         env = Environment(loader=FileSystemLoader(sFolderPath))
         template = env.get_template(sHtmlTemplatePath)
@@ -178,12 +183,12 @@ if __name__ == "__main__":
                          "tag_doctor_email": "khara.kleb@gmail.com",
                          "tag_payment_method": "Cash",
                          "tag_payment_identifier": "-",
-                         "tag_act_header_list": act_headers,
-                         "tag_act_details_list": act_details,
+                         # "tag_act_header_list": act_headers,
+                         # "tag_act_details_list": act_details,
                          "tag_acts_header_and_details": act_headers_and_details,
-                         "tag_total_sum": fGrandTotal,
-                         "tag_total_paid": fPaid,
-                         "tag_total_remaining": fGrandTotal-fPaid,
+                         "tag_total_sum": format(fGrandTotal, INVOICE_FLOAT_FORMAT),
+                         "tag_total_paid": format(fPaid, INVOICE_FLOAT_FORMAT),
+                         "tag_total_remaining": format(fGrandTotal-fPaid, INVOICE_FLOAT_FORMAT),
                          }
 
         # Render our file and create the PDF using our css style file

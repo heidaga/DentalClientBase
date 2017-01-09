@@ -352,17 +352,7 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         self.doctorID = -1
         self.mylist = [] #initially not showing anything
         self.bUpToDate = True
-
-        headerColumns = dict() 
-        headerColumns[COL_ACTDATE] = 'Date'
-        headerColumns[COL_ACTTYPE] = 'Act type'
-        headerColumns[COL_ACTUNITPRICE] = 'Unit Price'
-        headerColumns[COL_ACTQTY] = 'Quantity'
-        headerColumns[COL_ACTSUBTOTAL] = 'SubTotal'
-        headerColumns[COL_ACTPAID] = 'Paid'
-        self.header = headerColumns.values()
-    
-
+        self.header = ACTS_HEADER_DICT.values()
     # ***************************************************    
     #private get set functions
 
@@ -456,6 +446,8 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
                 return False 
             elif iCol == COL_ACTPAID: 
                 dentalAct.SetVarPaid(value)
+            elif iCol == COL_ACTPATIENT: 
+                dentalAct.SetVarPatientName(value)
 
             self.dataChanged.emit(index, index)
             return True
@@ -686,7 +678,7 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         iCol = index.column()
-        if(iCol == COL_ACTUNITPRICE):
+        if(iCol in [COL_ACTUNITPRICE, COL_ACTPATIENT]):
             editor = QtGui.QLineEdit(parent)
             return editor            
         elif(iCol == COL_ACTDATE):
@@ -708,8 +700,9 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
     def setEditorData(self, editor, index):
         # iCol = index.column()
         if editor.metaObject().className() == "QLineEdit":
-            fVal = index.model().data(index, QtCore.Qt.DisplayRole)
-            editor.setText(str(fVal))
+            # val can be a float (unit price) or string (patient name)
+            val = index.model().data(index, QtCore.Qt.DisplayRole)
+            editor.setText(str(val))
 
         elif editor.metaObject().className() == "QDateEdit":
             sDate = index.model().data(index, QtCore.Qt.DisplayRole)

@@ -33,10 +33,6 @@ this modified database ... ??
 
 
  ### ***********  OPTIONS  ***********
-
-APP_SETTINGS = os.path.join(APP_DIR, APP_RESOURCES, "settings.ini")
-APP_LOGO_PATH = os.path.join(APP_DIR, APP_RESOURCES, APP_LOGO_NAME)
-APP_BANNER_PATH = os.path.join(APP_DIR, APP_RESOURCES, APP_BANNER_NAME)
 verbose = False
 # =======================================================================
 

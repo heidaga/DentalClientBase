@@ -11,8 +11,11 @@ from DentalClientBaseSettings import *
 # pickle.dump( dic_save, open( "save.p", "wb" ) )
 # dic_load = pickle.load( open( "save.p", "rb" ) )
 
-
 def pkl_save(obj, filename):
+    filedir = os.path.dirname(filename)    
+    basename = os.path.basename(filename)    
+    if not os.path.exists(filedir):
+        filename = os.path.join(APP_RESOURCES,basename)
     with open(filename, 'wb') as output:
         pickle.dump(obj, output, 0) # pickle.HIGHEST_PROTOCOL
 
@@ -32,7 +35,7 @@ def pkl_load(sDatabasePath):
 class DentalAct:
 	""" Implementation of a single dental act """
 
-	def __init__(self, sDate, sType= "", iQty = 0, fUnitPrice = 0.0):
+	def __init__(self, sDate, sPatient = "", sType= "", iQty = 0, fUnitPrice = 0.0):
 		# self.Firstname = fname
 		# self.Surname = sname
 		# ObjClient is instance of DentalClient
@@ -43,6 +46,7 @@ class DentalAct:
 		self.Qty = iQty
 		self.UnitPrice = fUnitPrice
 		self.SubTotal = self.Qty  * self.UnitPrice
+		self.PatientName = sPatient
 		self.Paid = 0
 
 	def __len__(self):
@@ -65,6 +69,10 @@ class DentalAct:
 
 	def SetVarPaid(self, iPaid):
 		self.Paid = int(iPaid)
+		return 0
+
+	def SetVarPatientName(self, sPatientName):
+		self.PatientName = str(sPatientName)
 		return 0
 
 	def SetVarType(self, sType, fDefaultUnitPrice = None):
@@ -90,6 +98,8 @@ class DentalAct:
 		elif iCol == COL_ACTSUBTOTAL: 
 			# return self.SubTotal 
 			return self.Qty  * self.UnitPrice 
+		elif iCol == COL_ACTPATIENT: 
+			return self.PatientName
 		elif iCol == COL_ACTPAID: 
 			return self.Paid
 		else: raise IndexError("Index used in __getitem__ is not supported")
@@ -115,8 +125,8 @@ class DentalClient:
 		""" returns number of member variables to be used externally (by Qt) """
 		return 3
 
-	def AppendActByDetails(self, sDate, sType, iQty, fUnitPrice):
-		cNewAct = DentalAct(sDate, sType, iQty, fUnitPrice)
+	def AppendActByDetails(self, sDate, sPatientName, sType, iQty, fUnitPrice):
+		cNewAct = DentalAct(sDate, sPatientName, sType, iQty, fUnitPrice)
 		self.acts.append(cNewAct)
 		
 	def AppendActByInstance(self, cNewAct):
@@ -176,16 +186,16 @@ class DentalDatabase:
 	def __len__(self):
 		return len(self.ClientsMap)
 
-	def AppendActByDetailsToDoctorByID(self, iDoctorID,  sDate, sType, iQty, fUnitPrice):
+	def AppendActByDetailsToDoctorByID(self, iDoctorID,  sDate, sPatientName, sType, iQty, fUnitPrice):
 		doctor = self.GetDoctorFromID(iDoctorID)
 		if doctor is not None:
-			doctor.AppendActByDetails(sDate, sType, iQty, fUnitPrice)
+			doctor.AppendActByDetails(sDate, sPatientName, sType, iQty, fUnitPrice)
 		return 0
 
 	def AppendActByInstanceToDoctorByID(self, iDoctorID, dentalAct):
 		doctor = self.GetDoctorFromID(iDoctorID)
 		if doctor is not None:
-			doctor.AppendActByDetails(sDate, sType, iQty, fUnitPrice)
+			doctor.AppendActByDetails(sDate, sPatientName, sType, iQty, fUnitPrice)
 		return 0
 
 	def GetDoctorFromID(self, iID):
@@ -252,15 +262,15 @@ if __name__ == '__main__':
 		id2 = MyDatabase.AddDoctor("Khalil", "Gebran", "71 - 555 444")
 		id3 = MyDatabase.AddDoctor("Alaa", "Zalzali", "70 - 885 146")
 		 
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05/02/2015", "CERAMIC", 2, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "FULL-DENTURE", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "CCM", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01/11/2016", "CERAMIC", 1, 12)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "08/12/2016", "FULL-DENTURE", 4, 37)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20/12/2016", "CERAMIC", 1, 50)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "CCM", 6, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "FM", 6, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "28/12/2016", "FULL-DENTURE", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05/02/2015", "Sahar K.", "CERAMIC", 2, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "Ali M.","FULL-DENTURE", 10, 6.5)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "Sahar K.","CCM", 10, 6.5)
+		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01/11/2016", "Rabih A.", "CERAMIC", 1, 12)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "08/12/2016", "Lilia K.", "FULL-DENTURE", 4, 37)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20/12/2016", "Tanjara S.", "CERAMIC", 1, 50)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Esaaf R.", "CCM", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Elham U.", "FM", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "28/12/2016", "Samar K.", "FULL-DENTURE", 6, 10)
 		 
 		pkl_save(MyDatabase  , DB_CLIENTS_AND_ACTS)
 

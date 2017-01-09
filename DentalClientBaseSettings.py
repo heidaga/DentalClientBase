@@ -5,8 +5,8 @@ import os
 #########################
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
-APP_RESOURCES = "res"
-APP_DIR = os.getcwd()
+APP_RESOURCES_FOLDER = "res"
+APP_SETTINGS_FILE = "settings.ini"
 APP_LOGO_NAME = "logonew_tr.png"
 APP_BANNER_NAME = "banner_tr.png"
 
@@ -57,15 +57,16 @@ APP_SETTINGS_PHONE_FORMAT = APP_SETTINGS_PHONE_OPTION1
 # TABLE- ACTS
 #########################
 APP_SETTINGS_TABLE_ACTS_FONT = "Courier New" 
-APP_SETTINGS_TABLE_ACTS_FONTSIZE = 12
+APP_SETTINGS_TABLE_ACTS_FONTSIZE = 10
 
 # Column indices - enum style
 COL_ACTDATE         = 0
 COL_ACTTYPE         = 1
-COL_ACTUNITPRICE    = 2
-COL_ACTQTY          = 3
-COL_ACTSUBTOTAL     = 4
-COL_ACTPAID         = 5 
+COL_ACTUNITPRICE    = 3
+COL_ACTQTY          = 4
+COL_ACTSUBTOTAL     = 5
+COL_ACTPATIENT      = 2 
+COL_ACTPAID         = 6 
 
 # Date format for each act
 # APP_SETTINGS_ACTDATE_FORMAT_DISPLAY = "dd/MMMM/yyyy"  #  01/January/2000
@@ -82,3 +83,31 @@ APP_SETTINGS_TABLE_DEFAULTACTS_FONTSIZE = 10
 # ICONS
 #########################
 APP_SETTINGS_SCALED_ICONS_RESOLUTION = 100 # pixel
+
+
+#########################
+# INVOICE
+#########################
+INVOICE_FLOAT_FORMAT = '.2f'
+
+
+
+
+###############################################
+# ADDITIONAL SETTINGS NON USER MODIFIABLE
+###############################################
+
+APP_DIR = os.getcwd()
+APP_RESOURCES = os.path.join(APP_DIR, APP_RESOURCES_FOLDER)
+APP_SETTINGS = os.path.join(APP_RESOURCES, APP_SETTINGS_FILE)
+APP_LOGO_PATH = os.path.join(APP_RESOURCES, APP_LOGO_NAME)
+APP_BANNER_PATH = os.path.join(APP_RESOURCES, APP_BANNER_NAME)
+
+
+ACTS_HEADER_DICT = dict() 
+ACTS_HEADER_DICT[COL_ACTDATE] = 'Date'
+ACTS_HEADER_DICT[COL_ACTTYPE] = 'Act type'
+ACTS_HEADER_DICT[COL_ACTUNITPRICE] = 'Unit Price'
+ACTS_HEADER_DICT[COL_ACTQTY] = 'Quantity'
+ACTS_HEADER_DICT[COL_ACTSUBTOTAL] = 'SubTotal'
+ACTS_HEADER_DICT[COL_ACTPATIENT] = 'Patient Name'
