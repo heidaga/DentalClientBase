@@ -56,7 +56,7 @@ APP_SETTINGS_PHONE_FORMAT = APP_SETTINGS_PHONE_OPTION1
 #########################
 # TABLE- ACTS
 #########################
-APP_SETTINGS_TABLE_ACTS_FONT = "Courier New" 
+APP_SETTINGS_TABLE_ACTS_FONT = "MS Shell Dlg 2" #"Courier New" 
 APP_SETTINGS_TABLE_ACTS_FONTSIZE = 10
 
 # Column indices - enum style

@@ -330,7 +330,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.setFont(font)
         # set column width to fit contents (set font first!)
         hh = table_view.horizontalHeader()
-        # hh.setStretchLastSection(True)
+        hh.setStretchLastSection(True)
         table_view.resizeColumnsToContents()
         table_view.resizeRowsToContents()
         # enable sorting
@@ -351,7 +351,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.setFont(font)
         # set column width to fit contents (set font first!)
         hh = table_view.horizontalHeader()
-        # hh.setStretchLastSection(True)
+        hh.setStretchLastSection(True)
         table_view.resizeColumnsToContents()
         table_view.resizeRowsToContents()
         # enable sorting
@@ -522,9 +522,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.resizeRowsToContents()
         
         hh = table_view.horizontalHeader()
-        vv = table_view.verticalHeader()
-        w = vv.width()
-        print "table view width:", w
+        # vv = table_view.verticalHeader()
+        
         table_view.setColumnWidth(COL_ACTDATE,          ACT_TABLE_COLUMNSIZE_DATE)
         table_view.setColumnWidth(COL_ACTTYPE,          ACT_TABLE_COLUMNSIZE_TYPE)
         table_view.setColumnWidth(COL_ACTPATIENT,       ACT_TABLE_COLUMNSIZE_PATIENT)
