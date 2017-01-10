@@ -326,7 +326,7 @@
                <bool>true</bool>
               </property>
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -431,7 +431,7 @@
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="0" column="5" rowspan="2">
            <layout class="QVBoxLayout" name="verticalLayout">
-            <item alignment="Qt::AlignRight">
+            <item alignment="Qt::AlignRight|Qt::AlignVCenter">
              <widget class="QLineEdit" name="LE_time">
               <property name="enabled">
                <bool>true</bool>
@@ -444,7 +444,7 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>14</pointsize>
+                <pointsize>10</pointsize>
                 <weight>50</weight>
                 <bold>false</bold>
                 <stylestrategy>PreferDefault</stylestrategy>
@@ -454,17 +454,20 @@
                <bool>false</bool>
               </property>
               <property name="text">
-               <string/>
+               <string>Time</string>
+              </property>
+              <property name="frame">
+               <bool>false</bool>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
               <property name="readOnly">
                <bool>true</bool>
               </property>
              </widget>
             </item>
-            <item alignment="Qt::AlignRight">
+            <item alignment="Qt::AlignRight|Qt::AlignVCenter">
              <widget class="QLineEdit" name="LE_date">
               <property name="maximumSize">
                <size>
@@ -474,16 +477,19 @@
               </property>
               <property name="font">
                <font>
-                <pointsize>14</pointsize>
+                <pointsize>10</pointsize>
                 <weight>50</weight>
                 <bold>false</bold>
                </font>
               </property>
               <property name="text">
-               <string/>
+               <string>Date</string>
+              </property>
+              <property name="frame">
+               <bool>false</bool>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
               <property name="readOnly">
                <bool>true</bool>

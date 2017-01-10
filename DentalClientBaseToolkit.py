@@ -21,6 +21,12 @@ import sys
 # Non open to user modification
 APP_SETTINGS_ACTDATE_FORMAT_DATABASE = "dd/MM/yyyy"
 
+ACT_TABLE_ALIGNEMENT_DATE = QtCore.Qt.AlignHCenter
+ACT_TABLE_ALIGNEMENT_TYPE = QtCore.Qt.AlignHCenter
+ACT_TABLE_ALIGNEMENT_PATIENT = QtCore.Qt.AlignLeft
+ACT_TABLE_ALIGNEMENT_NOTES = QtCore.Qt.AlignHCenter
+ACT_TABLE_ALIGNEMENT_FLOATS = QtCore.Qt.AlignRight
+
 # ***********************************************************************
 # ***********************************************************************
 # ***********************************************************************
@@ -385,7 +391,19 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         
         if not index.isValid(): 
             return None
-        
+
+        elif role == QtCore.Qt.TextAlignmentRole:
+            if iCol in [COL_ACTUNITPRICE, COL_ACTQTY, COL_ACTSUBTOTAL]:
+                return ACT_TABLE_ALIGNEMENT_FLOATS
+            elif iCol == COL_ACTTYPE:
+                return ACT_TABLE_ALIGNEMENT_TYPE
+            elif iCol == COL_ACTPATIENT:
+                return ACT_TABLE_ALIGNEMENT_PATIENT
+            elif iCol == COL_ACTDATE:
+                return ACT_TABLE_ALIGNEMENT_DATE
+            elif iCol == COL_ACTNOTES:
+                return ACT_TABLE_ALIGNEMENT_NOTES
+
         elif role == QtCore.Qt.DisplayRole:
             if iCol < 0 or iCol > self.columnCount(None): return None
             # `__getitem__` used also by "sorted"
@@ -395,6 +413,7 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
                 return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
             else: 
                 return val
+        
         # elif role == QtCore.Qt.BackgroundRole:
         #     iPaid = dentalActAtRow.__getitem__(COL_ACTPAID)
         #     if(iPaid == 1): 
@@ -437,6 +456,8 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
                 dentalAct.SetVarDate(value)
             elif iCol == COL_ACTTYPE:
                 dentalAct.SetVarType(value, self.defaultPrices[value])
+            elif iCol == COL_ACTNOTES:
+                dentalAct.SetVarNotes(value)
             elif iCol == COL_ACTUNITPRICE:
                 # if value == "": value = self.data(index)
                 dentalAct.SetVarUnitPrice(value)
@@ -678,7 +699,7 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         iCol = index.column()
-        if(iCol in [COL_ACTUNITPRICE, COL_ACTPATIENT]):
+        if(iCol in [COL_ACTUNITPRICE, COL_ACTPATIENT, COL_ACTNOTES]):
             editor = QtGui.QLineEdit(parent)
             return editor            
         elif(iCol == COL_ACTDATE):

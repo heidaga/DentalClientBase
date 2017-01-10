@@ -47,11 +47,14 @@ class DentalAct:
 		self.UnitPrice = fUnitPrice
 		self.SubTotal = self.Qty  * self.UnitPrice
 		self.PatientName = sPatient
+		self.Notes = ""
+
+		# Not to be viewed
 		self.Paid = 0
 
 	def __len__(self):
 		""" returns number of member variables to be used externally (by Qt) """
-		return 6
+		return 7
 
 	def SetVarDate(self, sDate):
 		self.Date = str(sDate)
@@ -81,6 +84,10 @@ class DentalAct:
 			self.SetVarUnitPrice(fDefaultUnitPrice)
 		return 0
 
+	def SetVarNotes(self, sNotes):
+		self.Notes = str(sNotes)
+		return 0
+
 	""" ONLY FOR SORTING : acts as a getter 
 		To sort dates, i only return the date string
 		then the output value is Qt-formatted in the GUI class 
@@ -102,6 +109,8 @@ class DentalAct:
 			return self.PatientName
 		elif iCol == COL_ACTPAID: 
 			return self.Paid
+		elif iCol == COL_ACTNOTES: 
+			return self.Notes
 		else: raise IndexError("Index used in __getitem__ is not supported")
 
 

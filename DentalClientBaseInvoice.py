@@ -78,6 +78,7 @@ def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
     s+= "      <td>Act #{0}</td>\n".format(iID)
     
     for iHeader in ACTS_HEADER_DICT:
+        if iHeader in HEADERS_TO_EXCLUDE_FROM_INVOICE: continue
         css_class = str()
         sval = str()
         if iHeader == COL_ACTDATE : css_class = " class=\"service\""
