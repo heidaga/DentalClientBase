@@ -49,8 +49,12 @@ COL_DRLASTNAME      = 1
 COL_DRPHONE         = 2
 
 # Phone number format
-APP_SETTINGS_PHONE_OPTION1 = "{0} - {1} {2}"
+# warning: unformatting phone numbers is based on "-" only for now
+# option1: 01 - 631 714
+APP_SETTINGS_PHONE_OPTION1 = "{0} - {1} {2}" 
+# option2: 01 - 63 17 14
 APP_SETTINGS_PHONE_OPTION2 = "{0} - {1} {2} {3}"
+# Default option
 APP_SETTINGS_PHONE_FORMAT = APP_SETTINGS_PHONE_OPTION1
 
 #########################
@@ -123,3 +127,8 @@ ACTS_HEADER_DICT[COL_ACTQTY] = 'Quantity'
 ACTS_HEADER_DICT[COL_ACTSUBTOTAL] = 'SubTotal'
 ACTS_HEADER_DICT[COL_ACTPATIENT] = 'Patient Name'
 # ACTS_HEADER_DICT[COL_ACTPAID] = 'Paid' # not included
+
+DOCTORS_HEADER_DICT = dict() 
+DOCTORS_HEADER_DICT[COL_DRFIRSTNAME] = 'First Name'
+DOCTORS_HEADER_DICT[COL_DRLASTNAME] = 'Last Name'
+DOCTORS_HEADER_DICT[COL_DRPHONE] = 'Phone Number'

@@ -37,7 +37,7 @@ class DentalAct:
 
 	def __init__(self, sDate, sPatient = "", sType= "", iQty = 0, fUnitPrice = 0.0):
 		# self.Firstname = fname
-		# self.Surname = sname
+		# self.Lastname = sname
 		# ObjClient is instance of DentalClient
 		
 		# self.client = ObjClient # no need anymore coz instanciated as part of DentalClient
@@ -121,7 +121,7 @@ class DentalAct:
 class DentalClient:
 	def __init__(self, fname, sname, sphone , email = "", address = ""):
 		self.Firstname = fname   	# string required
-		self.Surname = sname 		# string required
+		self.Lastname = sname 		# string required
 		self.Phone = sphone			# string required
 
 		self.Email = email 			# string optional
@@ -147,17 +147,17 @@ class DentalClient:
 		return 0
 
 	def id(self):
-		# return sha1(self.Firstname+self.Surname+self.Phone)
-		return HashClientID(self.Firstname,self.Surname,self.Phone)
+		# return sha1(self.Firstname+self.Lastname+self.Phone)
+		return HashClientID(self.Firstname,self.Lastname,self.Phone)
 
 	def GetFullName(self):
-		return self.Firstname + " " + self.Surname
+		return self.Firstname + " " + self.Lastname
 
 	def SetVarFirstname(self, sVal):
 		self.Firstname = str(sVal)
 
 	def SetVarLastname(self, sVal):
-		self.Surname = str(sVal)
+		self.Lastname = str(sVal)
 
 	def SetVarPhone(self, sVal):
 		self.Phone = str(sVal)
@@ -176,7 +176,7 @@ class DentalClient:
 		if iCol == COL_DRFIRSTNAME: 
 			return self.Firstname
 		elif iCol == COL_DRLASTNAME: 
-			return self.Surname
+			return self.Lastname
 		elif iCol == COL_DRPHONE: 
 			return self.Phone
 		else: raise IndexError("Index used in __getitem__ is not supported")
@@ -201,10 +201,14 @@ class DentalDatabase:
 			doctor.AppendActByDetails(sDate, sPatientName, sType, iQty, fUnitPrice)
 		return 0
 
-	def AppendActByInstanceToDoctorByID(self, iDoctorID, dentalAct):
+	def AppendActByInstanceToDoctorByID(self, iDoctorID, dentalActInstance):
 		doctor = self.GetDoctorFromID(iDoctorID)
 		if doctor is not None:
-			doctor.AppendActByDetails(sDate, sPatientName, sType, iQty, fUnitPrice)
+			doctor.AppendActByDetails(dentalActInstance.Date, 
+									  dentalActInstance.PatientName, 
+									  dentalActInstance.Type, 
+									  dentalActInstance.Qty, 
+									  dentalActInstance.UnitPrice)
 		return 0
 
 	def GetDoctorFromID(self, iID):
@@ -214,8 +218,22 @@ class DentalDatabase:
 			return None 
 		return self.ClientsMap[iID]
 
-	def AddDoctor(self, sFname, sLname, sPhone):
-		newdoctor = DentalClient(sFname, sLname, sPhone)
+	def AddDoctorByDetails(self, sFname, sLname, sPhone, sAddress = "", sEmail=""):
+		newdoctor = DentalClient(sFname, sLname, sPhone, sEmail, sAddress)
+		newdoctor_id = newdoctor.id()
+		if newdoctor_id in self.ClientsMap:
+			print "Doctor is exists already in the database"
+			return 0
+		else: 
+			self.ClientsMap[newdoctor_id] = newdoctor
+			return newdoctor_id
+
+	def AddDoctorByInstance(self, dentalClientInstance):
+		newdoctor = DentalClient(dentalClientInstance.Firstname,
+								 dentalClientInstance.Lastname, 
+								 dentalClientInstance.Phone,
+								 dentalClientInstance.Email,
+								 dentalClientInstance.Address)
 		newdoctor_id = newdoctor.id()
 		if newdoctor_id in self.ClientsMap:
 			print "Doctor is exists already in the database"
@@ -238,6 +256,9 @@ class DentalDatabase:
 			return []
 		else: 
 			return doctor.acts
+
+	def GetNbActsByDoctorID(self, iDoctorID):
+		return len(self.GetListActsByDoctorID(iDoctorID))
 
 
 instance_of_dental_database = DentalDatabase()
@@ -267,9 +288,9 @@ if __name__ == '__main__':
 		
 		MyDatabase = DentalDatabase()
 		
-		id1 = MyDatabase.AddDoctor("Samir", "Kassir", "03 - 789 366")
-		id2 = MyDatabase.AddDoctor("Khalil", "Gebran", "71 - 555 444")
-		id3 = MyDatabase.AddDoctor("Alaa", "Zalzali", "70 - 885 146")
+		id1 = MyDatabase.AddDoctorByDetails("Samir", "Kassir", "03789366")
+		id2 = MyDatabase.AddDoctorByDetails("Khalil", "Gebran", "71555444")
+		id3 = MyDatabase.AddDoctorByDetails("Alaa", "Zalzali", "70885146")
 		 
 		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05/02/2015", "Sahar K.", "CERAMIC", 2, 10)
 		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "Ali M.","FULL-DENTURE", 10, 6.5)

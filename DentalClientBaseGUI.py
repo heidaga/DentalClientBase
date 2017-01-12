@@ -15,6 +15,7 @@ from PySide.QtGui import QMessageBox
 # pyside-uic compiled files resulting from *.ui files
 import ui_windowmain
 import ui_windowsettings
+from ui_dialogNewDoctor import Ui_Form
 
 from DentalClientBaseStructs import *
 from DentalClientBaseToolkit import *
@@ -183,6 +184,9 @@ class GeneralSettings(QtGui.QMainWindow):
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
 
+    # def focusOutEvent(self, event):
+    #     self.setFocus(QtCore.Qt.StrongFocus)
+
     def OnClose(self):
         if self.bUpToDate:
             self.close()
@@ -305,6 +309,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.LE_time.setText(stime)
 
         self.winsettings = GeneralSettings(self)
+        self.NewDoctorDialog = QNewDoctorDialog(self)
 
         list_doctors = []
         self.DefaultActsDict = self.winsettings.GetDefaultActs()
@@ -313,8 +318,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
                 list_doctors = self.ParsedDentalDatabase.GetListDoctors()
 
-        # self.TableModelDoctors = DoctorTableModelNew(self)
-        self.TableModelDoctors = DoctorTableModel(self)
+        self.TableModelDoctors = DoctorTableModelNew(self)
+        # self.TableModelDoctors = DoctorTableModel(self)
         self.TableModelActs = ActTableModelNew(self)
 
         # TABLE VIEW : DOCTORS
@@ -339,7 +344,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # TABLE VIEW : ACTS
         table_view = self.ui.m_tableacts
         table_view.setModel(self.TableModelActs)
-        # table_view.setEditTriggers( QtGui.QAbstractItemView.NoEditTriggers )
+        table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked ) # AllEditTriggers # NoEditTriggers 
         table_view.setDragDropOverwriteMode(False)
         table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
@@ -359,7 +364,10 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # Set delegates
         qDelegateAct = DentalActDelegate(table_view, self.DefaultActsDict.keys())
         table_view.setItemDelegate(qDelegateAct)
-# 
+
+        self.ActiveClientID = -1
+        self.LastKnownActType = ""
+
     # ********************************************************************************
 
     ###### Member functions related to Qt
@@ -387,58 +395,18 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     def OnOpenSettings(self):
         # avoid multiple open
-        if(not self.winsettings.isVisible()):
-            self.winsettings.show()
-            # disables also all child windows including settings windows 
-            # self.setEnabled(0)
+        self.winsettings.show()
+        self.winsettings.activateWindow()
         return 0
 
     # **********  TABLE ACTS EVENTS ***********************
 
-    def OnTableComboChangeValue__DEPRECATED(self, iNumber):
-        table = self.ui.m_tableacts
-        # http://stackoverflow.com/questions/1332110/selecting-qcombobox-in-qtablewidget
-        iRow = self.sender().property("row")
-        qItemUnitPrice = table.item(iRow, COL_ACTUNITPRICE) 
-        if(qItemUnitPrice is None):
-            qItemUnitPrice = QtGui.QTableWidgetItem()
-            table.setItem(iRow, COL_ACTUNITPRICE, qItemUnitPrice)
-        
-        qComboActs = table.cellWidget(iRow, COL_ACTTYPE)
-        sActType = qComboActs.currentText()
-        DefaultActsDict = self.winsettings.GetDefaultActs() # returns act names vs price
-        sUnitPrice = str(DefaultActsDict[sActType])
-        qItemUnitPrice.setText(sUnitPrice)
-
-    def OnAddAct__DEPRECATED(self):
-        table = self.ui.m_tableacts
-        iNbRow = table.rowCount()
-        table.setRowCount(iNbRow+1)
-        iRow = table.currentRow()
-        
-        # Column date
-        toolkit_new_item(table, iRow, COL_ACTDATE, self.ui.LE_date.text())
-
-        # Column type
-        # TODO: fill combo with values coming database saved in settings
-        # create combo from default acts defined in settings
-        ComboItemsDict = self.winsettings.GetDefaultActs() # returns act names vs price
-        ComboItems = ComboItemsDict.keys() # keep only act names
-        qComboActs = QtGui.QComboBox()
-        qComboActs.addItems(ComboItems)
-        # http://stackoverflow.com/questions/1332110/selecting-qcombobox-in-qtablewidget
-        qComboActs.setProperty("row", iRow)
-        qComboActs.currentIndexChanged.connect(self.OnTableComboChangeValue)
-        table.setCellWidget(iRow, COL_ACTTYPE, qComboActs)
-        # Column unit price
-        # Done using slot OnTableComboChangeValue
-        # Column quantity
-        qSpinQty = QtGui.QComboBox()
-        return 0
-
     def OnAddAct(self):
-        self.TableModelActs.addAct()
-    
+        sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
+        newDentalAct = DentalAct(sCurrentDate, "", self.LastKnownActType) # remaining kept default
+        self.TableModelActs.addDentalActToModel(self.ActiveClientID, newDentalAct)
+        return 0
+        
     def OnRemoveAct(self):
         table = self.ui.m_tableacts
         iRowToDel = table.currentRow()
@@ -455,9 +423,14 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     # **********  TABLE CLIENTS EVENTS ***********************
     def OnAddDoctor(self):
-        table = self.ui.m_tableclients
-        iRow = table.rowCount()
-        table.setRowCount(iRow+1)
+        qDialog = self.NewDoctorDialog
+        qDialog.cleanLineEdits()
+        # qDialog.show()
+        # qDialog.activateWindow()
+        if qDialog.exec_() == QtGui.QDialog.Accepted:
+            newDentalClient = qDialog.getNewDoctor()
+            # self.ParsedDentalDatabase.AddDoctorByInstance(newDentalClient)
+            self.TableModelDoctors.AddDoctorToDatabase(newDentalClient)      
         return 0 
 
     def OnRemoveDoctor(self):
@@ -481,24 +454,6 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # table.setRowCount(rowCount-1)
         return 0 
 
-    def OnDoubleClickClient__DEPRECATED(self, iRow, iCol):
-        """ 
-            Visualise/edit database of acts for the selected doctor
-            Used with a "cellDoubleClicked" signal fired QTableWidget
-        """
-        qItem = self.ui.m_tableclients.item(iRow,0)
-        qItem2 = self.ui.m_tableclients.item(iRow,1)
-        if qItem is None or qItem2 is None : 
-            return 0
-
-        sName = self.ui.m_tableclients.item(iRow,0).text()
-        sSurname = self.ui.m_tableclients.item(iRow,1).text()
-        if sName == "" or sSurname == "" : return 0
-        else:
-           if verbose: print "Selected doctor: ", sName, sSurname
-
-        return 0
-
     def OnActivateClient(self, qIndex):
         """ Visualise/edit database of acts for the selected doctor
             Used with a "doubleClicked" signal fired from QTableView
@@ -509,13 +464,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view = self.ui.m_tableacts
         table_model_doctors = self.TableModelDoctors
         table_model_acts = self.TableModelActs
-        # iRow =  table_view.selectionModel().currentIndex().row()
         iRow = qIndex.row()
-        sFirstname = table_model_doctors.index(iRow, COL_DRFIRSTNAME).data()
-        sLastname = table_model_doctors.index(iRow, COL_DRLASTNAME).data()
-        sPhone = table_model_doctors.index(iRow, COL_DRPHONE).data()
-        hash_id = HashClientID(sFirstname,sLastname,sPhone)
-        table_model_acts.SetModelForDoctorByID(hash_id)
+        self.ActiveClientID = table_model_doctors.getHashIDFromSelectedDoctor(qIndex)
+        table_model_acts.SetModelForDoctorByID(self.ActiveClientID)
         table_view.setModel(table_model_acts)
 
         table_view.resizeColumnsToContents()
@@ -534,6 +485,60 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # hh.setStretchLastSection(True)
 
         return 0
+
+
+
+#****************************************************************************************************
+#****************************************************************************************************
+#****************************************************************************************************
+
+
+class QNewDoctorDialog(QtGui.QDialog):
+
+    def __init__(self, parent=None):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
+        self.ui.PB_Ok.clicked.connect(self.accept)
+        self.ui.PB_Cancel.clicked.connect(self.reject)
+        self.cleanLineEdits()
+
+    def validate(self):
+        if self.ui.firstName.text() == "": return False
+        if self.ui.lastName.text() == "": return False
+        if self.ui.phoneNumber.text() == "": return False
+        return True
+
+    def cleanLineEdits(self):
+        self.ui.firstName.setText("")
+        self.ui.lastName.setText("")
+        self.ui.phoneNumber.setText("")
+        self.ui.address.setText("")
+        self.ui.email.setText("")
+    
+    def getNewDoctor(self):
+        """ Returns a DentalClient instance """
+        return DentalClient(self.ui.firstName.text(),
+                            self.ui.lastName.text(),
+                            self.ui.phoneNumber.text(),
+                            self.ui.email.text(),
+                            self.ui.address.text())
+
+    def accept(self):
+        if self.validate():
+            return QtGui.QDialog.accept(self)
+        else:
+            toolkit_ShowCriticalMessage("Unable to add new doctor.\nPlease fill in the starred fields.")
+
+
+#****************************************************************************************************
+#****************************************************************************************************
+#****************************************************************************************************
+#****************************************************************************************************
+#****************************************************************************************************
+
+
+
 
 
 if __name__ == '__main__':

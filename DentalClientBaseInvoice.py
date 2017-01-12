@@ -7,7 +7,7 @@ http://pbpython.com/pdf-reports.html
 """
 # from __future__ import print_function
 from jinja2 import Environment, FileSystemLoader
-# from weasyprint import HTML
+from weasyprint import HTML
 import pandas as pd
 import os
 
@@ -100,8 +100,9 @@ def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
 # modes 1/2 depend on which css using (check folders invoice and invoice2)
 def to_html_actdetails(listOfDentalActInstances, mode = 1):
     s = str()
-    for j, actj in enumerate(listOfDentalActInstances):
-        s+= to_html_dentalActInstance(j+1, actj, mode)
+    for j, jAct in enumerate(listOfDentalActInstances):
+        if jAct.SubTotal != 0:
+            s += to_html_dentalActInstance(j+1, jAct, mode)
     return s
 
 # modes 1/2 depend on which css using (check folders invoice and invoice2)
@@ -114,6 +115,7 @@ def to_html_actheaders(mode = 1):
         s+= "    <tr class=\"heading\">\n"
     s+= "      <th></th>\n"
     for iHeader in ACTS_HEADER_DICT:
+        if iHeader in HEADERS_TO_EXCLUDE_FROM_INVOICE: continue
         s+= "      <th>{0}</th>\n".format(ACTS_HEADER_DICT[iHeader])
     s+= "    </tr>\n"
     s+= "  </thead>\n"
@@ -195,12 +197,14 @@ if __name__ == "__main__":
         # Render our file and create the PDF using our css style file
         sHtmlContent = template.render(template_vars)
 
-        sOutputFname = "index_parsed_stylesheet_{0}".format(css_style)    
+        sOutputFname = "index_parsed_stylesheet_{0}".format(css_style)
+        HtmlOutPath = os.path.join(sFolderPath,sOutputFname+".html") 
+        PdfOutPath = os.path.join(sFolderPath,sOutputFname+".pdf") 
 
-        with open(os.path.join(sFolderPath,sOutputFname+".html"), "w") as text_file:
+        with open(HtmlOutPath, "w") as text_file:
             text_file.write("{0}".format(sHtmlContent))
 
-        # HTML(string=sHtmlContent).write_pdf(sOutputFname+".pdf", stylesheets=[sHtmlCSSPath])
+        # HTML(string=sHtmlContent).write_pdf(PdfOutPath, stylesheets=[sHtmlCSSPath])
 
     test()
 
