@@ -1,3 +1,6 @@
+# VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
+__version__ =  '      0       .       5       .           0         .         0      '
+
 """
 # Client Databse app for managing contacts and dental acts
 """
@@ -23,7 +26,6 @@ from DentalClientBaseToolkit import *
 from DentalClientBaseSettings import *
 
 import time
-import numpy as np
 import cPickle as pickle
 """
 # TODOs
@@ -429,7 +431,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         return 0 
 
     # **********  TABLE CLIENTS EVENTS ***********************
-    
+
     def OnAddDoctor(self):
         qDialog = self.NewDoctorDialog
         qDialog.cleanLineEdits()

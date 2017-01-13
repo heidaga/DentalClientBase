@@ -7,3 +7,6 @@ ui_*.py
 *.pdf
 *.html
 !index_template.html
+/Output
+/dist
+/build
