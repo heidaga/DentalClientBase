@@ -4,6 +4,7 @@
 # *** general
 import sys
 import os
+import subprocess
 
 # *** qt specific
 from PySide import QtGui, QtCore
@@ -76,6 +77,7 @@ class GeneralSettings(QtGui.QMainWindow):
 
         self.DefaultActsDatabasePath = "res/database_defaultprices.dat"
         self.DefaultActs = dict()
+        self.LastInvoiceNo = -1
 
         self.InitSettings()
 
@@ -93,16 +95,25 @@ class GeneralSettings(QtGui.QMainWindow):
                 while True:
                     line = fo.readline()
                     if not line: break
-                    db = line.strip().split("=")
-                    if verbose: print ">>> database", db
-                    if db[0].strip() == "Database_DefaultActs":
-                        self.DefaultActsDatabasePath = db[1].strip() 
-                    elif db[0].strip() == "Database_DoctorsActs":    
-                        self.DoctorsActsDatabasePath = db[1].strip()
+                    splitLine = line.strip().split("=")
+                    sSettingKey = splitLine[0].strip()
+                    sSettingVal = splitLine[1].strip()
+                    # if verbose: print ">>> database", splitLine
+                    
+                    if sSettingKey == "Database_DefaultActs":
+                        self.DefaultActsDatabasePath = sSettingVal 
+                    
+                    elif sSettingKey == "Database_DoctorsActs":    
+                        self.DoctorsActsDatabasePath = sSettingVal
+                    
+                    elif sSettingKey == "LastInvoiceNo":
+                        self.LastInvoiceNo = sSettingVal
+                        if self.LastInvoiceNo < 0: self.LastInvoiceNo = 0 
         else:
             with open(APP_SETTINGS, 'w') as fo:
                 fo.write("Database_DoctorsActs = {0}\n".format(self.DoctorsActsDatabasePath))
                 fo.write("Database_DefaultActs = {0}\n".format(self.DefaultActsDatabasePath))
+                fo.write("LastInvoiceNo = {0}\n".format(self.LastInvoiceNo))
 
         # Load default acts
         bFoundDatabasePrices = False
@@ -174,6 +185,7 @@ class GeneralSettings(QtGui.QMainWindow):
         with open(APP_SETTINGS, 'w') as fo:
             fo.write("Database_DoctorsActs = {0}\n".format(self.DoctorsActsDatabasePath))
             fo.write("Database_DefaultActs = {0}\n".format(self.DefaultActsDatabasePath))
+            fo.write("LastInvoiceNo = {0}\n".format(self.LastInvoiceNo))
 
         toolkit_populate_table_from_dict(self.ui.m_tabledefaultacts, self.DefaultActs)
         self.bUpToDate = False
@@ -294,6 +306,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_RemoveDoctor.setEnabled(1)
 
         # SLOTS
+        self.ui.PB_Calculator.clicked.connect(self.OnSpawnCalculator)
         self.ui.PB_Close.clicked.connect(self.OnClose)
         self.ui.PB_Settings.clicked.connect(self.OnOpenSettings)
         self.ui.PB_AddDoctor.clicked.connect(self.OnAddDoctor)
@@ -365,7 +378,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         qDelegateAct = DentalActDelegate(table_view, self.DefaultActsDict.keys())
         table_view.setItemDelegate(qDelegateAct)
 
-        self.ActiveClientID = -1
+        self.ActiveClientID = None
         self.LastKnownActType = ""
 
     # ********************************************************************************
@@ -375,8 +388,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
-        if event.key() == QtCore.Qt.Key_F4:
-            self.OpenActWindow("XXX")
+        # if event.key() == QtCore.Qt.Key_F4:
+        #     self.OpenActWindow("XXX")
 
         # if event.key() == QtCore.Qt.Key_F10:
         # 	red alert 2 taunts !! EASTER EGG
@@ -388,15 +401,15 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.close()
         return 0
 
-    def OpenActWindow(self, client):
-    	win = ClientActsGUI(self)
-    	win.show()
-    	return 0
-
     def OnOpenSettings(self):
         # avoid multiple open
         self.winsettings.show()
         self.winsettings.activateWindow()
+        return 0
+
+    def OnSpawnCalculator(self):
+        # os.system('calc.exe')
+        subprocess.call("calc.exe")
         return 0
 
     # **********  TABLE ACTS EVENTS ***********************
@@ -404,24 +417,19 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
     def OnAddAct(self):
         sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
         newDentalAct = DentalAct(sCurrentDate, "", self.LastKnownActType) # remaining kept default
-        self.TableModelActs.addDentalActToModel(self.ActiveClientID, newDentalAct)
+        self.TableModelActs.addDentalAct(self.ActiveClientID, newDentalAct)
         return 0
         
     def OnRemoveAct(self):
-        table = self.ui.m_tableacts
-        iRowToDel = table.currentRow()
-        rowCount = table.rowCount()
-        if rowCount == 0:
-         return 0
-        # print "iRowToDel", iRowToDel
-        # print "rowCount (before)", rowCount
-        table.removeRow(iRowToDel)
-        rowCount = table.rowCount()
-        # print "rowCount (after)", rowCount
-        # table.setRowCount(iRow-1)
+        table_view = self.ui.m_tableacts
+        selectModel = table_view.selectionModel()
+        selectedIndexes = selectModel.selectedIndexes()
+        iRowToDel = selectedIndexes[0].row()
+        self.TableModelActs.removeDentalAct(self.ActiveClientID, iRowToDel)
         return 0 
 
     # **********  TABLE CLIENTS EVENTS ***********************
+    
     def OnAddDoctor(self):
         qDialog = self.NewDoctorDialog
         qDialog.cleanLineEdits()
@@ -434,33 +442,21 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         return 0 
 
     def OnRemoveDoctor(self):
-        table = self.ui.m_tableclients
-        rowCount = table.rowCount()
-        if rowCount == 0: return 0
-        
-        iRowToDel = table.currentRow()
-        qItem = self.ui.m_tableclients.item(iRowToDel,0)
-        qItem2 = self.ui.m_tableclients.item(iRowToDel,1)
-        if qItem is None or qItem2 is None : return 0
-        sName = self.ui.m_tableclients.item(iRowToDel,0).text()
-        sSurname = self.ui.m_tableclients.item(iRowToDel,1).text()
-        if sName == "" or sSurname == "" : return 0
-
+        #TODO : continue
         sMsg = "Are you sure to delete a doctor entry and all related dental acts ?"
         toolkit_ShowDeleteMessage(sMsg)
         if ret == QMessageBox.Cancel: return 0
 
-        table.removeRow(iRowToDel)
-        # table.setRowCount(rowCount-1)
+        # table.removeRow(iRowToDel)
+        # # table.setRowCount(rowCount-1)
+        if self.ActiveClientID is None: return 0
+
         return 0 
 
     def OnActivateClient(self, qIndex):
         """ Visualise/edit database of acts for the selected doctor
             Used with a "doubleClicked" signal fired from QTableView
         """
-        # qIndex is an instance of QModelIndex 
-        # print "Test selection on clients table", qIndex.row(), qIndex.column()
-        
         table_view = self.ui.m_tableacts
         table_model_doctors = self.TableModelDoctors
         table_model_acts = self.TableModelActs
@@ -468,12 +464,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ActiveClientID = table_model_doctors.getHashIDFromSelectedDoctor(qIndex)
         table_model_acts.SetModelForDoctorByID(self.ActiveClientID)
         table_view.setModel(table_model_acts)
-
         table_view.resizeColumnsToContents()
         table_view.resizeRowsToContents()
-        
         hh = table_view.horizontalHeader()
-        # vv = table_view.verticalHeader()
         
         table_view.setColumnWidth(COL_ACTDATE,          ACT_TABLE_COLUMNSIZE_DATE)
         table_view.setColumnWidth(COL_ACTTYPE,          ACT_TABLE_COLUMNSIZE_TYPE)
@@ -483,9 +476,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.setColumnWidth(COL_ACTQTY,           ACT_TABLE_COLUMNSIZE_QTY)
         table_view.setColumnWidth(COL_ACTSUBTOTAL,      ACT_TABLE_COLUMNSIZE_TOTAL)
         # hh.setStretchLastSection(True)
-
         return 0
-
 
 
 #****************************************************************************************************
@@ -536,9 +527,6 @@ class QNewDoctorDialog(QtGui.QDialog):
 #****************************************************************************************************
 #****************************************************************************************************
 #****************************************************************************************************
-
-
-
 
 
 if __name__ == '__main__':

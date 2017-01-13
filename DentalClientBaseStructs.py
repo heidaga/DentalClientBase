@@ -113,7 +113,6 @@ class DentalAct:
 			return self.Notes
 		else: raise IndexError("Index used in __getitem__ is not supported")
 
-
 # ***********************************************************************
 # ***********************************************************************
 # ***********************************************************************
@@ -144,6 +143,11 @@ class DentalClient:
 			return 0
 		else:
 			self.acts.append(cNewAct)
+		return 0
+		
+	def RemoveActByIndex(self, iActIndex):
+		if iActIndex < 0: return 0
+		else: del self.acts[iActIndex]
 		return 0
 
 	def id(self):
@@ -209,6 +213,11 @@ class DentalDatabase:
 									  dentalActInstance.Type, 
 									  dentalActInstance.Qty, 
 									  dentalActInstance.UnitPrice)
+		return 0
+	
+	def RemoveActByIndexByDoctorID(self, iDoctorID, iActIndex):
+		doctor = self.GetDoctorFromID(iDoctorID)
+		doctor.RemoveActByIndex(iActIndex)
 		return 0
 
 	def GetDoctorFromID(self, iID):

@@ -37,10 +37,19 @@ def sha1(x):
     return hashlib.sha1(x.encode(sys.getfilesystemencoding())).hexdigest()
 
 def HashClientID(sFirstname, sLastName, sPhone):
-    if sFirstname == "": return -1
-    if sLastName == "": return -1
-    if sPhone == "": return -1
+    if sFirstname == "": return None
+    if sLastName == "": return None
+    if sPhone == "": return None
     return sha1(sFirstname+sLastName+sPhone)
+
+# i need this act hash to search for the act in the database and delete
+# unless if passing the row index is sufficient !?
+# def HashActID(self):
+    # if self.Date="": return None
+    # if self.Type="": return None
+    # if self.PatientName="": return None
+    # return sha1(self.Date+self.Type+str(self.UnitPrice)+str(self.Qty)
+
 
 # ***********************************************************************
 # ***********************************************************************
@@ -270,12 +279,18 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         else: 
             return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable  
 
-    def addDentalActToModel(self, iDoctorID, dentalActInstance):
+    def addDentalAct(self, iDoctorID, dentalActInstance):
         count = self.database.GetNbActsByDoctorID(iDoctorID)
         self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
         self.database.AppendActByInstanceToDoctorByID(iDoctorID, dentalActInstance)
         self.endInsertRows()
-        return True
+
+    def removeDentalAct(self, iDoctorID, iRowIndex):
+        count = self.database.GetNbActsByDoctorID(iDoctorID)
+        self.beginRemoveRows(QtCore.QModelIndex(), count, count-1)
+        self.database.RemoveActByIndexByDoctorID(iDoctorID, iRowIndex)
+        self.endRemoveRows()
+        self.layoutChanged.emit()
 
 class DoctorTableModelNew(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
