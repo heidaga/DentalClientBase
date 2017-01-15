@@ -6,9 +6,10 @@ import os
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
 APP_RESOURCES_FOLDER = "res"
+APP_INVOICE_EXPORT_FOLDER = "invoice_exports"
 APP_SETTINGS_FILE = "settings.ini"
-APP_LOGO_NAME = "logonew_tr.png"
-APP_BANNER_NAME = "banner_tr.png"
+APP_LOGO_NAME = "logo.png"
+APP_BANNER_NAME = "banner.png"
 
 APP_SETTINGS_COLOR_TABLE ="""
 QTableView 
@@ -116,6 +117,8 @@ APP_RESOURCES = os.path.join(APP_DIR, APP_RESOURCES_FOLDER)
 APP_SETTINGS = os.path.join(APP_RESOURCES, APP_SETTINGS_FILE)
 APP_LOGO_PATH = os.path.join(APP_RESOURCES, APP_LOGO_NAME)
 APP_BANNER_PATH = os.path.join(APP_RESOURCES, APP_BANNER_NAME)
+APP_INVOICE_RESOURCES_FOLDER = os.path.join(APP_RESOURCES, "invoice")
+APP_INVOICE_EXPORTS = os.path.join(APP_DIR, APP_INVOICE_EXPORT_FOLDER)
 
 
 ACTS_HEADER_DICT = dict() 

@@ -5,16 +5,20 @@ https://github.com/NextStepWebs/simple-html-invoice-template
 http://pbpython.com/pdf-reports.html
 
 """
-# from __future__ import print_function
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
-import pandas as pd
 import os
+import base64
 
 from DentalClientBaseStructs import *
 from DentalClientBaseToolkit import *
 from DentalClientBaseSettings import *
 
+# logoPath = os.path.join(APP_RESOURCES_FOLDER, "logo.png")
+# logoHtmlSrc = os.path.join(APP_INVOICE_RESOURCES_FOLDER, "logo_src.txt")
+# encoded_logo = base64.b64encode(open(APP_BANNER_PATH, "rb").read())
+# with open(logoHtmlSrc, "w") as text_file:
+#     text_file.write(encoded_logo)
 
 def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
     Act = dentalActInstance
@@ -81,61 +85,34 @@ def to_html_acts_header_and_details(listOfDentalActInstances, mode = 1):
     return s
 
 
-if __name__ == "__main__":
-    
-    def test():
-        DB_CLIENTS_AND_ACTS = "res/Database2017.dat"
-        
-        ParsedDatabase =  pickle.load( open( DB_CLIENTS_AND_ACTS , "rb" ) )
-        print "len(ParsedDatabase)", len(ParsedDatabase)
-        print "Nb parsed doctors", ParsedDatabase.GetNbDoctors()
-
-        list_doctors = ParsedDatabase.GetListDoctors()
-        for doctor in list_doctors:
-            print "Dr.", doctor.GetFullName()
-
-        last_doctor = list_doctors[-1]
-        list_of_acts = ParsedDatabase.GetListActsByDoctorID(last_doctor.id())
-        fPaid = 100
+def ExportInvoice(iInvoiceID, dentalClient, listDentalActs):
+        css_style = 1
+        act_headers_and_details = to_html_acts_header_and_details(listDentalActs, css_style)
+        fPaid = 100.0
         fGrandTotal = 0.0
-        for jAct in list_of_acts:
+        for jAct in listDentalActs:
             fGrandTotal += jAct.SubTotal
 
-        # test the output on:
-        # http://htmledit.squarefree.com/
-        print "\n\n **********************"
+        # if logo hash function unchanged, store this value and re-use to save time
+        # sEncodedLogo = base64.b64encode(open(APP_BANNER_PATH, "rb").read())
 
-        css_style = 1
-        act_headers_and_details = to_html_acts_header_and_details(list_of_acts, css_style)
-        # act_headers = to_html_actheaders(sHeaderList, css_style)
-        # act_details = to_html_actdetails(list_of_acts, css_style)
+        sHtmlTemplatePath = "index_template.html"
+        # sHtmlTemplatePath = os.path.join(APP_INVOICE_RESOURCES_FOLDER,"index_template.html") 
+        sHtmlCSSPath = os.path.join(APP_INVOICE_RESOURCES_FOLDER, "style.css")
 
-        sHtmlTemplatePath = str()
-        sHtmlCSSPath = str()
-        sFolderPath = str()
-        if css_style == 1:
-            sFolderPath = "invoice"
-            sHtmlTemplatePath = "index_template.html"
-            sHtmlCSSPath = os.path.join(sFolderPath, "style.css")
-        # elif css_style == 2:
-        #     sFolderPath = "invoice2"
-        #     sHtmlTemplatePath = "index_template2.html"
-        #     sHtmlCSSPath = os.path.join(sFolderPath, "style.css")
-
-        env = Environment(loader=FileSystemLoader(sFolderPath))
+        env = Environment(loader=FileSystemLoader(APP_INVOICE_RESOURCES_FOLDER))
         template = env.get_template(sHtmlTemplatePath)
         template_vars = {
+                         # "tag_logo" : sEncodedLogo,
                          "tag_user_notice" : "Nothing to mention",
-                         "tag_invoice_id": "425",
+                         "tag_invoice_id": iInvoiceID,
                          "tag_actual_date": "01 Jan 2017",
                          "tag_due_date": "01 Feb 2017",
-                         "tag_doctor_full_name": "Ali Saad",
-                         "tag_doctor_address": "Ghbayreh ya tayreh",
-                         "tag_doctor_email": "khara.kleb@gmail.com",
+                         "tag_doctor_full_name": dentalClient.GetFullName(),
+                         "tag_doctor_address": dentalClient.Address,
+                         "tag_doctor_email": dentalClient.Email,
                          "tag_payment_method": "Cash",
                          "tag_payment_identifier": "-",
-                         # "tag_act_header_list": act_headers,
-                         # "tag_act_details_list": act_details,
                          "tag_acts_header_and_details": act_headers_and_details,
                          "tag_total_sum": format(fGrandTotal, INVOICE_FLOAT_FORMAT),
                          "tag_total_paid": format(fPaid, INVOICE_FLOAT_FORMAT),
@@ -145,23 +122,38 @@ if __name__ == "__main__":
         # Render our file and create the PDF using our css style file
         sHtmlContent = template.render(template_vars)
 
-        sOutputFname = "index_parsed_stylesheet_{0}".format(css_style)
-        HtmlOutPath = os.path.join(sFolderPath,sOutputFname+".html") 
-        PdfOutPath = os.path.join(sFolderPath,sOutputFname+".pdf") 
+        sName = dentalClient.GetFullName()
+        sNameNoSpace = sName.replace(" ", "_")
+        sOutputFname = "invoice_{0}____{1}".format(iInvoiceID,sNameNoSpace)
+        HtmlOutPath = os.path.join(APP_INVOICE_EXPORTS,sOutputFname+".html") 
+        PdfOutPath = os.path.join(APP_INVOICE_EXPORTS,sOutputFname+".pdf") 
 
         with open(HtmlOutPath, "w") as text_file:
             text_file.write("{0}".format(sHtmlContent))
 
         # HTML(string=sHtmlContent).write_pdf(PdfOutPath, stylesheets=[sHtmlCSSPath])
 
+
+
+if __name__ == "__main__":
+    
+    def test():
+        DB_CLIENTS_AND_ACTS = "res/Database2017.dat"
+        ParsedDatabase =  pickle.load( open( DB_CLIENTS_AND_ACTS , "rb" ) )
+        list_doctors = ParsedDatabase.GetListDoctors()
+        last_doctor = list_doctors[-1]
+        list_of_acts = ParsedDatabase.GetListActsByDoctorID(last_doctor.id())
+
+        ExportInvoice(56, last_doctor, list_of_acts)
+
+
     test()
-
-
 
 
 """
 Template tags
 
+{{ tag_logo }}
 {{ tag_user_notice }}
 {{ tag_invoice_id }}
 {{ tag_actual_date }}

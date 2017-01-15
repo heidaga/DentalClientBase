@@ -12,6 +12,7 @@ from DentalClientBaseSettings import *
 # dic_load = pickle.load( open( "save.p", "rb" ) )
 
 def pkl_save(obj, filename):
+    # if filename == ""
     filedir = os.path.dirname(filename)    
     basename = os.path.basename(filename)    
     if not os.path.exists(filedir):
@@ -55,6 +56,18 @@ class DentalAct:
 	def __len__(self):
 		""" returns number of member variables to be used externally (by Qt) """
 		return 7
+
+	def GetMonth(self):
+		# ATTENTION: APP_SETTINGS_ACTDATE_FORMAT_DISPLAY
+		sDate = self.Date
+		sDate.split("/")
+		return str(sDate[1])
+
+	def GetYear(self):
+		# ATTENTION: APP_SETTINGS_ACTDATE_FORMAT_DISPLAY
+		sDate = self.Date
+		sDate.split("/")
+		return str(sDate[2])
 
 	def SetVarDate(self, sDate):
 		self.Date = str(sDate)
@@ -219,6 +232,12 @@ class DentalDatabase:
 		doctor = self.GetDoctorFromID(iDoctorID)
 		doctor.RemoveActByIndex(iActIndex)
 		return 0
+	
+	def RemoveDoctorByID(self, iDoctorID):
+		if not iDoctorID in self.ClientsMap: 
+			return 0
+		del self.ClientsMap[iDoctorID]
+		return 0
 
 	def GetDoctorFromID(self, iID):
 		""" returns a DentalClient instance """
@@ -266,6 +285,22 @@ class DentalDatabase:
 		else: 
 			return doctor.acts
 
+	def GetListActsByDoctorIdByDate(self, iDoctorID, sMonth, sYear):
+		""" returns a list of DentalAct instances for a given date (month and year) """
+		lacts = self.GetListActsByDoctorID(iDoctorID)
+		print "len(lacts) ", len(lacts)
+		print "sMonth ", sMonth
+		print "sYear ", sYear
+		newlacts = list()
+		for jAct in lacts:
+			print "jAct.GetMonth(): ", jAct.GetMonth()
+			print "jAct.GetYear(): ", jAct.GetYear()
+			if jAct.GetMonth() != sMonth: continue
+			if jAct.GetYear() != sYear: continue
+			newlacts.append(jAct)
+		print "len(newlacts) ", len(newlacts)
+		return  newlacts
+
 	def GetNbActsByDoctorID(self, iDoctorID):
 		return len(self.GetListActsByDoctorID(iDoctorID))
 
@@ -281,7 +316,7 @@ if __name__ == '__main__':
 
 	def test():
 		
-		DB_DEFAULTPRICES = "test_defaultprices.pkl"
+		DB_DEFAULTPRICES = "res/DefaultPrices2017.dat"
 		
 		defaultprices = dict()
 		defaultprices["CERAMIC"]= 13.5
@@ -303,13 +338,14 @@ if __name__ == '__main__':
 		 
 		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05/02/2015", "Sahar K.", "CERAMIC", 2, 10)
 		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "Ali M.","FULL-DENTURE", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "Sahar K.","CCM", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01/11/2016", "Rabih A.", "CERAMIC", 1, 12)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/01/2017", "Sahar K.","CCM", 10, 6.5)
+		MyDatabase.AppendActByDetailsToDoctorByID(id1, "30/01/2017", "Sahar K.","FULL-DENTURE", 10, 6.5)
+		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01/01/2016", "Rabih A.", "CERAMIC", 1, 12)
 		MyDatabase.AppendActByDetailsToDoctorByID(id3, "08/12/2016", "Lilia K.", "FULL-DENTURE", 4, 37)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20/12/2016", "Tanjara S.", "CERAMIC", 1, 50)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20/01/2017", "Tanjara S.", "CERAMIC", 1, 50)
 		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Esaaf R.", "CCM", 6, 10)
 		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Elham U.", "FM", 6, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "28/12/2016", "Samar K.", "FULL-DENTURE", 6, 10)
+		MyDatabase.AppendActByDetailsToDoctorByID(id3, "28/01/2017", "Samar K.", "FULL-DENTURE", 6, 10)
 		 
 		pkl_save(MyDatabase  , DB_CLIENTS_AND_ACTS)
 

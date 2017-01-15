@@ -1,5 +1,5 @@
 # VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       5       .           0         .         0      '
+__version__ =  '      0       .       6       .           0         .         0      '
 
 """
 # Client Databse app for managing contacts and dental acts
@@ -24,6 +24,7 @@ from ui_dialogNewDoctor import Ui_Form
 from DentalClientBaseStructs import *
 from DentalClientBaseToolkit import *
 from DentalClientBaseSettings import *
+from DentalClientBaseInvoice import *
 
 import time
 import cPickle as pickle
@@ -109,7 +110,7 @@ class GeneralSettings(QtGui.QMainWindow):
                         self.DoctorsActsDatabasePath = sSettingVal
                     
                     elif sSettingKey == "LastInvoiceNo":
-                        self.LastInvoiceNo = sSettingVal
+                        self.LastInvoiceNo = int(sSettingVal)
                         if self.LastInvoiceNo < 0: self.LastInvoiceNo = 0 
         else:
             with open(APP_SETTINGS, 'w') as fo:
@@ -200,6 +201,9 @@ class GeneralSettings(QtGui.QMainWindow):
 
     # def focusOutEvent(self, event):
     #     self.setFocus(QtCore.Qt.StrongFocus)
+
+    def GetLastInvoiceNo(self):
+        return self.LastInvoiceNo
 
     def OnClose(self):
         if self.bUpToDate:
@@ -308,6 +312,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_RemoveDoctor.setEnabled(1)
 
         # SLOTS
+        self.ui.PB_OpenInvoiceFolder.clicked.connect(self.OnOpenInvoiceFolder)
+        self.ui.PB_ExportInvoice.clicked.connect(self.OnExportInvoice)
         self.ui.PB_Calculator.clicked.connect(self.OnSpawnCalculator)
         self.ui.PB_Close.clicked.connect(self.OnClose)
         self.ui.PB_Settings.clicked.connect(self.OnOpenSettings)
@@ -323,12 +329,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.LE_date.setText(date)
         self.ui.LE_time.setText(stime)
 
-        self.winsettings = GeneralSettings(self)
+        self.appsettings = GeneralSettings(self)
         self.NewDoctorDialog = QNewDoctorDialog(self)
 
         list_doctors = []
-        self.DefaultActsDict = self.winsettings.GetDefaultActs()
-        self.ParsedDentalDatabase = self.winsettings.GetDoctorsActs() 
+        self.DefaultActsDict = self.appsettings.GetDefaultActs()
+        self.ParsedDentalDatabase = self.appsettings.GetDoctorsActs() 
         if type(self.ParsedDentalDatabase) == TYPE_DENTAL_DATABASE:
             if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
                 list_doctors = self.ParsedDentalDatabase.GetListDoctors()
@@ -397,21 +403,46 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # 	red alert 2 taunts !! EASTER EGG
 
     def OnClose(self):
-        if(not self.TableModelActs.IsUpToDate()):
-            sDatabasePath = self.winsettings.GetPath_DoctorActsDatabase()
+        bUTD1 = self.TableModelDoctors.IsUpToDate() 
+        bUTD2 = self.TableModelActs.IsUpToDate()
+        bExitWithoutSave = bUTD1 and bUTD2
+        if(not bExitWithoutSave):
+            sDatabasePath = self.appsettings.GetPath_DoctorActsDatabase()
             pkl_save(self.ParsedDentalDatabase, sDatabasePath)
         self.close()
         return 0
 
     def OnOpenSettings(self):
         # avoid multiple open
-        self.winsettings.show()
-        self.winsettings.activateWindow()
+        self.appsettings.show()
+        self.appsettings.activateWindow()
         return 0
 
     def OnSpawnCalculator(self):
         # os.system('calc.exe')
         subprocess.call("calc.exe")
+        return 0
+
+    def OnOpenInvoiceFolder(self):
+        subprocess.Popen(r'explorer /select,"C:\Users\RASPI\Desktop\Misc_coding\clientdatabase-tableview\invoice_exports\."')
+        # subprocess.call(r'explorer /select', APP_INVOICE_EXPORTS)
+        return 0
+
+    def OnExportInvoice(self):
+        sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
+        print "sCurrentDate ", sCurrentDate
+        sCurrentMonth = sCurrentDate.split("/")[1]
+        sCurrentYear = sCurrentDate.split("/")[2]
+        print "sCurrentMonth ", sCurrentMonth
+        print "sCurrentYear ", sCurrentYear
+        iInvoiceID = self.appsettings.GetLastInvoiceNo() + 1
+        doctorID = self.ActiveClientID
+        dentalDoctor = self.ParsedDentalDatabase.GetDoctorFromID(doctorID)
+        listDentalActs = self.ParsedDentalDatabase.GetListActsByDoctorIdByDate(doctorID, sCurrentMonth, sCurrentYear)
+        if len(listDentalActs) == 0 : 
+            toolkit_ShowWarningMessage("No dental acts found while exporting invoice. No invoice exported.")
+            return 0
+        ExportInvoice(iInvoiceID, dentalDoctor, listDentalActs)
         return 0
 
     # **********  TABLE ACTS EVENTS ***********************
@@ -426,6 +457,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view = self.ui.m_tableacts
         selectModel = table_view.selectionModel()
         selectedIndexes = selectModel.selectedIndexes()
+        qIndex = selectedIndexes[0]
+        if not qIndex.isValid(): return 0
         iRowToDel = selectedIndexes[0].row()
         self.TableModelActs.removeDentalAct(self.ActiveClientID, iRowToDel)
         return 0 
@@ -444,15 +477,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         return 0 
 
     def OnRemoveDoctor(self):
-        #TODO : continue
         sMsg = "Are you sure to delete a doctor entry and all related dental acts ?"
-        toolkit_ShowDeleteMessage(sMsg)
+        ret = toolkit_ShowDeleteMessage(sMsg)
         if ret == QMessageBox.Cancel: return 0
-
-        # table.removeRow(iRowToDel)
-        # # table.setRowCount(rowCount-1)
         if self.ActiveClientID is None: return 0
-
+        self.TableModelDoctors.RemoveDoctorFromDatabase(self.ActiveClientID)
         return 0 
 
     def OnActivateClient(self, qIndex):

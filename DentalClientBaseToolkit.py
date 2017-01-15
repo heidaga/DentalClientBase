@@ -21,10 +21,10 @@ import sys
 # Non open to user modification
 APP_SETTINGS_ACTDATE_FORMAT_DATABASE = "dd/MM/yyyy"
 
-ACT_TABLE_ALIGNEMENT_DATE = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-ACT_TABLE_ALIGNEMENT_TYPE = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-ACT_TABLE_ALIGNEMENT_PATIENT = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-ACT_TABLE_ALIGNEMENT_NOTES = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter 
+ACT_TABLE_ALIGNEMENT_DATE = QtCore.Qt.AlignCenter
+ACT_TABLE_ALIGNEMENT_TYPE = QtCore.Qt.AlignCenter
+ACT_TABLE_ALIGNEMENT_PATIENT = QtCore.Qt.AlignCenter
+ACT_TABLE_ALIGNEMENT_NOTES = QtCore.Qt.AlignCenter
 ACT_TABLE_ALIGNEMENT_FLOATS = QtCore.Qt.AlignCenter
 
 HASH_ROLE = 1000
@@ -144,6 +144,16 @@ def toolkit_new_item(table_widget, iRow, iCol, sText):
 class DoctorTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
         QtGui.QTableView.__init__(self, *args, **kwargs)
+        
+    def focusOutEvent(self, event):
+        # self.setFocus(QtCore.Qt.StrongFocus)
+        selectionModel = self.selectionModel()
+        selectedIndexes = selectionModel.selectedIndexes()
+        qIndex = selectedIndexes[0]
+        if not qIndex.isValid(): return 0
+        selectionModel.select(qIndex, QtGui.QItemSelectionModel.Deselect)
+
+
 class ActTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
         QtGui.QTableView.__init__(self, *args, **kwargs)
@@ -284,6 +294,7 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
         self.database.AppendActByInstanceToDoctorByID(iDoctorID, dentalActInstance)
         self.endInsertRows()
+        self.bUpToDate = False
 
     def removeDentalAct(self, iDoctorID, iRowIndex):
         count = self.database.GetNbActsByDoctorID(iDoctorID)
@@ -291,6 +302,7 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         self.database.RemoveActByIndexByDoctorID(iDoctorID, iRowIndex)
         self.endRemoveRows()
         self.layoutChanged.emit()
+        self.bUpToDate = False
 
 class DoctorTableModelNew(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
@@ -417,130 +429,23 @@ class DoctorTableModelNew(QtCore.QAbstractTableModel):
         
 
     def AddDoctorToDatabase(self, dentalClientInstance):
-        # count = self.database.GetNbDoctors()
-        # self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
         self.layoutAboutToBeChanged.emit()
         self.database.AddDoctorByInstance(dentalClientInstance)
         self.mylist = self.database.GetListDoctors()
         self.layoutChanged.emit()
-        # self.endInsertRows()
+        self.bUpToDate = False
 
-class ComboDelegate(QtGui.QItemDelegate):
-    """
-    A delegate that places a fully functioning QComboBox in every
-    cell of the column to which it's applied
-    """
-    def __init__(self, parent, argItemsList = []):
-
-        QtGui.QItemDelegate.__init__(self, parent)
-        self.itemsList = argItemsList
-
-    def createEditor(self, parent, option, index):
-        combo = QtGui.QComboBox(parent)
-        combo.setEditable(True)
-
-        li = []
-        if len(self.itemsList) == 0:
-            li.append("Zero")
-            li.append("One")
-            li.append("Two")
-            li.append("Three")
-        else: 
-            li = [sActType.upper() for sActType in self.itemsList]
-        
-        combo.addItems(li)
-        self.connect(combo, QtCore.SIGNAL("currentIndexChanged(int)"), self, QtCore.SLOT("currentIndexChanged()"))
-        return combo
-
-    def setEditorData(self, comboBox, index):
-        sComboText = index.model().data(index).upper()
-        itemID = comboBox.findText(sComboText)
-        comboBox.setCurrentIndex(itemID)
-        # comboBox.blockSignals(False)
-
-    def setModelData(self, comboBox, model, index):
-        sMsg = "Changing the type of act will remove the current unit price.\n"
-        sMsg += "Proceed ?"
-        sComboText = comboBox.currentText().upper()
-        sOldText = index.model().data(index).upper()
-        if sComboText != sOldText:
-            ret = toolkit_ShowWarningMessage2(sMsg)
-            if(ret == QMessageBox.Ok):
-                model.setData(index, sComboText, QtCore.Qt.EditRole)
-
-    def currentIndexChanged(self):
-        self.commitData.emit(self.sender())
-class SpinBoxDelegate(QtGui.QItemDelegate):
-    def createEditor(self, parent, option, index):
-        spinBox = QtGui.QSpinBox(parent)
-        spinBox.setMinimum(0)
-        spinBox.setMaximum(100)  
-        return spinBox
+    def RemoveDoctorFromDatabase(self, iDoctorID):
+        self.layoutAboutToBeChanged.emit()
+        self.database.RemoveDoctorByID(iDoctorID)
+        self.mylist = self.database.GetListDoctors()
+        self.layoutChanged.emit()
+        self.bUpToDate = False
   
-    def setEditorData(self, spinBox, index):
-        value = index.model().data(index, QtCore.Qt.DisplayRole)
-        spinBox.setValue(value)
-  
-    def setModelData(self, spinBox, model, index):
-        spinBox.interpretText()
-        value = spinBox.value() 
-        # print ">>> SpinBoxDelegate spinBox.value() ", value
-        model.setData(index, value, QtCore.Qt.EditRole)
-  
-    def updateEditorGeometry(self, editor, option, index):
-        editor.setGeometry(option.rect)
-class CheckBoxDelegate(QtGui.QStyledItemDelegate):
-    def __init__(self, parent = None):
-        QtGui.QStyledItemDelegate.__init__(self, parent)
-    def createEditor(self, parent, option, index):
-        return None
-    def paint(self, painter, option, index):
-        checked = bool(index.model().data(index, QtCore.Qt.DisplayRole))
-        check_box_style_option = QtGui.QStyleOptionButton()
-        if (index.flags() & QtCore.Qt.ItemIsEditable) > 0:
-            check_box_style_option.state |= QtGui.QStyle.State_Enabled
-        else:
-            check_box_style_option.state |= QtGui.QStyle.State_ReadOnly
-        if checked:
-            check_box_style_option.state |= QtGui.QStyle.State_On
-        else:
-            check_box_style_option.state |= QtGui.QStyle.State_Off
-        check_box_style_option.rect = self.getCheckBoxRect(option)
-        QtGui.QApplication.style().drawControl(QtGui.QStyle.CE_CheckBox, check_box_style_option, painter)
-    def editorEvent(self, event, model, option, index):
-        if not (index.flags() & QtCore.Qt.ItemIsEditable) > 0:
-            return False
-        # Do not change the checkbox-state
-        if event.type() == QtCore.QEvent.MouseButtonRelease or event.type() == QtCore.QEvent.MouseButtonDblClick:
-            if event.button() != QtCore.Qt.LeftButton or not self.getCheckBoxRect(option).contains(event.pos()):
-                return False
-            if event.type() == QtCore.QEvent.MouseButtonDblClick:
-                return True
-        elif event.type() == QtCore.QEvent.KeyPress:
-            if event.key() != QtCore.Qt.Key_Space and event.key() != QtCore.Qt.Key_Select:
-                return False
-        else:
-            return False
-        # Change the checkbox-state
-        self.setModelData(None, model, index)
-        return True
-    def setModelData (self, editor, model, index):
-        newValue = not bool(index.model().data(index, QtCore.Qt.DisplayRole))
-        model.setData(index, newValue, QtCore.Qt.EditRole)
-    def getCheckBoxRect(self, option):
-        check_box_style_option = QtGui.QStyleOptionButton()
-        check_box_rect = QtGui.QApplication.style().subElementRect(QtGui.QStyle.SE_CheckBoxIndicator, check_box_style_option, None)
-        check_box_point = QtCore.QPoint (option.rect.x() +
-                             option.rect.width() / 2 -
-                             check_box_rect.width() / 2,
-                             option.rect.y() +
-                             option.rect.height() / 2 -
-                             check_box_rect.height() / 2)
-        return QtCore.QRect(check_box_point, check_box_rect.size())       
 class DentalActDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None, argItemsList = []):
         QtGui.QStyledItemDelegate.__init__(self, parent)
-        self.list_of_default_acts = list(argItemsList)
+        self.list_of_default_acts = [sItem.upper() for sItem in argItemsList]
 
     def createEditor(self, parent, option, index):
         iCol = index.column()
@@ -581,7 +486,8 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
 
         elif editor.metaObject().className() == "QComboBox":
             sComboText = index.model().data(index, QtCore.Qt.DisplayRole).upper()
-            itemID = editor.findText(sComboText)
+            # which means ignore the default flag CaseSensitive
+            itemID = editor.findText(sComboText, QtCore.Qt.MatchExactly)
             editor.setCurrentIndex(itemID)
 
   
@@ -600,7 +506,9 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
         elif editor.metaObject().className() == "QComboBox":
             sComboText = editor.currentText().upper()
             sModelText = index.model().data(index).upper()
-            if sComboText != sModelText:
+            if sModelText == "" :
+                model.setData(index, sComboText, QtCore.Qt.EditRole)
+            else:
                 sMsg = "Changing the type of act will remove the current unit price.\n"
                 sMsg += "Do you want to proceed ?"
                 ret = toolkit_ShowWarningMessage2(sMsg)
