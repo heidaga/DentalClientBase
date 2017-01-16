@@ -85,54 +85,63 @@ def to_html_acts_header_and_details(listOfDentalActInstances, mode = 1):
     return s
 
 
-def ExportInvoice(iInvoiceID, dentalClient, listDentalActs):
-        css_style = 1
-        act_headers_and_details = to_html_acts_header_and_details(listDentalActs, css_style)
-        fPaid = 100.0
-        fGrandTotal = 0.0
-        for jAct in listDentalActs:
-            fGrandTotal += jAct.SubTotal
+def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs):
+    
+    sActualDate = "01-{0}-{1}".format(sMonth, sYear)
+    sDueDate = str()
+    if sMonth == "12": sDueDate = "01-01-{0}".format(int(sYear)+1)
+    else: 
+        sDueMonth = str(int(sMonth)+1).zfill(2)
+        sDueDate = "01-{0}-{1}".format(sDueMonth, sYear)
 
-        # if logo hash function unchanged, store this value and re-use to save time
-        # sEncodedLogo = base64.b64encode(open(APP_BANNER_PATH, "rb").read())
 
-        sHtmlTemplatePath = "index_template.html"
-        # sHtmlTemplatePath = os.path.join(APP_INVOICE_RESOURCES_FOLDER,"index_template.html") 
-        sHtmlCSSPath = os.path.join(APP_INVOICE_RESOURCES_FOLDER, "style.css")
+    css_style = 1
+    act_headers_and_details = to_html_acts_header_and_details(listDentalActs, css_style)
+    fPaid = 100.0
+    fGrandTotal = 0.0
+    for jAct in listDentalActs:
+        fGrandTotal += jAct.SubTotal
 
-        env = Environment(loader=FileSystemLoader(APP_INVOICE_RESOURCES_FOLDER))
-        template = env.get_template(sHtmlTemplatePath)
-        template_vars = {
-                         # "tag_logo" : sEncodedLogo,
-                         "tag_user_notice" : "Nothing to mention",
-                         "tag_invoice_id": iInvoiceID,
-                         "tag_actual_date": "01 Jan 2017",
-                         "tag_due_date": "01 Feb 2017",
-                         "tag_doctor_full_name": dentalClient.GetFullName(),
-                         "tag_doctor_address": dentalClient.Address,
-                         "tag_doctor_email": dentalClient.Email,
-                         "tag_payment_method": "Cash",
-                         "tag_payment_identifier": "-",
-                         "tag_acts_header_and_details": act_headers_and_details,
-                         "tag_total_sum": format(fGrandTotal, INVOICE_FLOAT_FORMAT),
-                         "tag_total_paid": format(fPaid, INVOICE_FLOAT_FORMAT),
-                         "tag_total_remaining": format(fGrandTotal-fPaid, INVOICE_FLOAT_FORMAT),
-                         }
+    # if logo hash function unchanged, store this value and re-use to save time
+    # sEncodedLogo = base64.b64encode(open(APP_BANNER_PATH, "rb").read())
 
-        # Render our file and create the PDF using our css style file
-        sHtmlContent = template.render(template_vars)
+    sHtmlTemplatePath = "index_template.html"
+    # sHtmlTemplatePath = os.path.join(APP_INVOICE_RESOURCES_FOLDER,"index_template.html") 
+    sHtmlCSSPath = os.path.join(APP_INVOICE_RESOURCES_FOLDER, "style.css")
 
-        sName = dentalClient.GetFullName()
-        sNameNoSpace = sName.replace(" ", "_")
-        sOutputFname = "invoice_{0}____{1}".format(iInvoiceID,sNameNoSpace)
-        HtmlOutPath = os.path.join(APP_INVOICE_EXPORTS,sOutputFname+".html") 
-        PdfOutPath = os.path.join(APP_INVOICE_EXPORTS,sOutputFname+".pdf") 
+    env = Environment(loader=FileSystemLoader(APP_INVOICE_RESOURCES_FOLDER))
+    template = env.get_template(sHtmlTemplatePath)
+    template_vars = {
+                     # "tag_logo" : sEncodedLogo,
+                     "tag_user_notice" : "Nothing to mention",
+                     "tag_invoice_id": iInvoiceID,
+                     "tag_actual_date": sActualDate,
+                     "tag_due_date": sDueDate,
+                     "tag_doctor_full_name": dentalClient.GetFullName(),
+                     "tag_doctor_address": dentalClient.Address,
+                     "tag_doctor_email": dentalClient.Email,
+                     "tag_payment_method": "Cash",
+                     "tag_payment_identifier": "-",
+                     "tag_acts_header_and_details": act_headers_and_details,
+                     "tag_total_sum": format(fGrandTotal, INVOICE_FLOAT_FORMAT),
+                     "tag_total_paid": format(fPaid, INVOICE_FLOAT_FORMAT),
+                     "tag_total_remaining": format(fGrandTotal-fPaid, INVOICE_FLOAT_FORMAT),
+                     }
 
-        with open(HtmlOutPath, "w") as text_file:
-            text_file.write("{0}".format(sHtmlContent))
+    # Render our file and create the PDF using our css style file
+    sHtmlContent = template.render(template_vars)
 
-        # HTML(string=sHtmlContent).write_pdf(PdfOutPath, stylesheets=[sHtmlCSSPath])
+    sName = dentalClient.GetFullName()
+    sNameNoSpace = sName.replace(" ", "_")
+    sOutputFname = "invoice_{0}____{1}".format(iInvoiceID,sNameNoSpace)
+    HtmlOutPath = os.path.join(APP_INVOICE_EXPORT_DIR,sOutputFname+".html") 
 
+    with open(HtmlOutPath, "w") as text_file:
+        text_file.write("{0}".format(sHtmlContent))
+
+    # PdfOutPath = os.path.join(APP_INVOICE_EXPORT_DIR,sOutputFname+".pdf") 
+    # HTML(string=sHtmlContent).write_pdf(PdfOutPath, stylesheets=[sHtmlCSSPath])
+    return HtmlOutPath
 
 
 if __name__ == "__main__":

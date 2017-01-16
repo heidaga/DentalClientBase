@@ -59,15 +59,11 @@ class DentalAct:
 
 	def GetMonth(self):
 		# ATTENTION: APP_SETTINGS_ACTDATE_FORMAT_DISPLAY
-		sDate = self.Date
-		sDate.split("/")
-		return str(sDate[1])
+		return str(self.Date.split("/")[1])
 
 	def GetYear(self):
 		# ATTENTION: APP_SETTINGS_ACTDATE_FORMAT_DISPLAY
-		sDate = self.Date
-		sDate.split("/")
-		return str(sDate[2])
+		return str(self.Date.split("/")[2])
 
 	def SetVarDate(self, sDate):
 		self.Date = str(sDate)
@@ -288,17 +284,11 @@ class DentalDatabase:
 	def GetListActsByDoctorIdByDate(self, iDoctorID, sMonth, sYear):
 		""" returns a list of DentalAct instances for a given date (month and year) """
 		lacts = self.GetListActsByDoctorID(iDoctorID)
-		print "len(lacts) ", len(lacts)
-		print "sMonth ", sMonth
-		print "sYear ", sYear
 		newlacts = list()
 		for jAct in lacts:
-			print "jAct.GetMonth(): ", jAct.GetMonth()
-			print "jAct.GetYear(): ", jAct.GetYear()
 			if jAct.GetMonth() != sMonth: continue
 			if jAct.GetYear() != sYear: continue
 			newlacts.append(jAct)
-		print "len(newlacts) ", len(newlacts)
 		return  newlacts
 
 	def GetNbActsByDoctorID(self, iDoctorID):
@@ -365,8 +355,8 @@ if __name__ == '__main__':
 			print "opening file 2 succeeded"
 
 
-	test()
-	test2()
+	# test()
+	# test2()
 	# test3()
 
 	

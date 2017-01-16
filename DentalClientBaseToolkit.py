@@ -17,6 +17,7 @@ import operator
 
 import hashlib
 import sys
+import webbrowser
 
 # Non open to user modification
 APP_SETTINGS_ACTDATE_FORMAT_DATABASE = "dd/MM/yyyy"
@@ -126,6 +127,16 @@ def toolkit_ShowDeleteMessage(msg):
     msgBox.setIconPixmap(QtGui.QPixmap('res/garbage.png').scaled(res,res))
     return msgBox.exec_()
 
+def toolkit_ReportUndefinedBehavior():
+    sMsg = "Unedfined error."
+    sMsg += " Please contact Ali Saad for more information."
+    toolkit_ShowWarningMessage(sMsg)
+    toolkit_ErrorReport()
+
+def toolkit_ErrorReport():
+    webbrowser.open_new_tab(APP_SETTINGS_REPORTING)
+
+    pass
 def toolkit_new_item(table_widget, iRow, iCol, sText):
     qItem = table_widget.item(iRow, iCol) 
     if(qItem is None):

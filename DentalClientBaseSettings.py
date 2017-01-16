@@ -38,6 +38,8 @@ QPushButton:default {
 APP_SETTINGS_FONT = "MS Shell Dlg 2" 
 APP_SETTINGS_FONTSIZE = 12
 
+APP_SETTINGS_REPORTING = r"mailto:alisaad05@gmail.com?subject=DCB_issue&body=Issue%20Description"
+
 #########################
 # TABLE- DOCTORS
 #########################
@@ -118,7 +120,7 @@ APP_SETTINGS = os.path.join(APP_RESOURCES, APP_SETTINGS_FILE)
 APP_LOGO_PATH = os.path.join(APP_RESOURCES, APP_LOGO_NAME)
 APP_BANNER_PATH = os.path.join(APP_RESOURCES, APP_BANNER_NAME)
 APP_INVOICE_RESOURCES_FOLDER = os.path.join(APP_RESOURCES, "invoice")
-APP_INVOICE_EXPORTS = os.path.join(APP_DIR, APP_INVOICE_EXPORT_FOLDER)
+APP_INVOICE_EXPORT_DIR = os.path.join(APP_DIR, APP_INVOICE_EXPORT_FOLDER)
 
 
 ACTS_HEADER_DICT = dict() 

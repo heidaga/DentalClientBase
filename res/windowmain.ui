@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1178</width>
-    <height>776</height>
+    <height>729</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -157,11 +157,11 @@
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open the folder containing all exported invoices&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Open Invoice Folder</string>
+             <string>Open Invoice</string>
             </property>
             <property name="icon">
              <iconset resource="../mainwindow.qrc">
-              <normaloff>:/icons/res/mail-2.png</normaloff>:/icons/res/mail-2.png</iconset>
+              <normaloff>:/icons/res/monitor.png</normaloff>:/icons/res/monitor.png</iconset>
             </property>
             <property name="iconSize">
              <size>

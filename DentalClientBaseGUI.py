@@ -1,5 +1,5 @@
 # VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       6       .           0         .         0      '
+__version__ =  '      0       .       7       .           0         .         0      '
 
 """
 # Client Databse app for managing contacts and dental acts
@@ -8,6 +8,8 @@ __version__ =  '      0       .       6       .           0         .         0 
 import sys
 import os
 import subprocess
+import time
+import cPickle as pickle
 
 # *** qt specific
 from PySide import QtGui, QtCore
@@ -26,8 +28,7 @@ from DentalClientBaseToolkit import *
 from DentalClientBaseSettings import *
 from DentalClientBaseInvoice import *
 
-import time
-import cPickle as pickle
+
 """
 # TODOs
 
@@ -204,6 +205,10 @@ class GeneralSettings(QtGui.QMainWindow):
 
     def GetLastInvoiceNo(self):
         return self.LastInvoiceNo
+
+    def SetLastInvoiceNo(self, iVal):
+        self.LastInvoiceNo = iVal
+        return 0
 
     def OnClose(self):
         if self.bUpToDate:
@@ -424,25 +429,57 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         return 0
 
     def OnOpenInvoiceFolder(self):
-        subprocess.Popen(r'explorer /select,"C:\Users\RASPI\Desktop\Misc_coding\clientdatabase-tableview\invoice_exports\."')
-        # subprocess.call(r'explorer /select', APP_INVOICE_EXPORTS)
+        # print ">>> APP_INVOICE_EXPORT_DIR:" , APP_INVOICE_EXPORT_DIR
+        # subprocess.Popen(r'explorer /select,"D:\LOCAL_DEV\_temp\DentalClientBase\invoice_exports\."')
+        # subprocess.Popen(r'explorer /select' + APP_INVOICE_EXPORT_DIR)
+        filename = ""
+        filters = ["Dental Database Invoice (*.html)", "Any files (*)"]
+        dialog = QtGui.QFileDialog(self, "Open Exported Invoice", directory = APP_INVOICE_EXPORT_DIR)
+        dialog.setNameFilters(filters)
+        dialog.setViewMode(QtGui.QFileDialog.Detail)
+        dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
+        dialog.setFileMode(QtGui.QFileDialog.ExistingFile)
+        if dialog.exec_():
+            filename = dialog.selectedFiles()[0]
+        if filename == "":
+            sMsg = "No exported invoice selected for viewing."
+            toolkit_ShowWarningMessage(sMsg)
+            return 0
+        webbrowser.open_new_tab(filename)
         return 0
 
     def OnExportInvoice(self):
+        # TODO: set self.ActiveClientID to None when TableDoctors is deselected/out of focus
+        doctorID = self.ActiveClientID
+        if doctorID is None:
+            sMsg = "Unable to export invoice before selecting a doctor."
+            sMsg += " No invoice exported."
+            toolkit_ShowWarningMessage(sMsg)
+            return 0
+
         sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
-        print "sCurrentDate ", sCurrentDate
         sCurrentMonth = sCurrentDate.split("/")[1]
         sCurrentYear = sCurrentDate.split("/")[2]
-        print "sCurrentMonth ", sCurrentMonth
-        print "sCurrentYear ", sCurrentYear
         iInvoiceID = self.appsettings.GetLastInvoiceNo() + 1
-        doctorID = self.ActiveClientID
         dentalDoctor = self.ParsedDentalDatabase.GetDoctorFromID(doctorID)
         listDentalActs = self.ParsedDentalDatabase.GetListActsByDoctorIdByDate(doctorID, sCurrentMonth, sCurrentYear)
         if len(listDentalActs) == 0 : 
-            toolkit_ShowWarningMessage("No dental acts found while exporting invoice. No invoice exported.")
+            sMsg = "No dental acts found for the current month while exporting invoice."
+            sMsg += " No invoice exported."
+            toolkit_ShowWarningMessage(sMsg)
             return 0
-        ExportInvoice(iInvoiceID, dentalDoctor, listDentalActs)
+        
+        # attempt to export an invoice
+        sExportedInvoice = ExportInvoice(iInvoiceID, sCurrentMonth, sCurrentYear, dentalDoctor, listDentalActs)
+        
+        if sExportedInvoice is None:
+            toolkit_ReportUndefinedBehavior()
+            return 0
+
+        # increment invoice counter after successful export 
+        if sExportedInvoice != "" :
+            self.appsettings.SetLastInvoiceNo(iInvoiceID)
+            webbrowser.open_new_tab(filename)
         return 0
 
     # **********  TABLE ACTS EVENTS ***********************
