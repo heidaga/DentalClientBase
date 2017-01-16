@@ -119,7 +119,7 @@
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:400;&quot;&gt;Export invoice for a highlighted doctor in the doctors database&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
-             <string>Create Invoice</string>
+             <string>Export and View Invoice</string>
             </property>
             <property name="icon">
              <iconset resource="../mainwindow.qrc">
