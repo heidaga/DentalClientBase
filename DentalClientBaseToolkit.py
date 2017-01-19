@@ -10,7 +10,7 @@ http://doc.qt.io/qt-4.8/qabstractitemmodel.html#endResetModel
 from PySide import QtGui, QtCore
 from PySide.QtGui import QMessageBox
 from PySide.QtGui import QColor
-from PySide.QtCore import qDebug
+# from PySide.QtCore import qDebug
 from enum import Enum
 from DentalClientBaseSettings import *
 import operator
@@ -22,13 +22,29 @@ import webbrowser
 # Non open to user modification
 APP_SETTINGS_ACTDATE_FORMAT_DATABASE = "dd/MM/yyyy"
 
-ACT_TABLE_ALIGNEMENT_DATE = QtCore.Qt.AlignCenter
-ACT_TABLE_ALIGNEMENT_TYPE = QtCore.Qt.AlignCenter
-ACT_TABLE_ALIGNEMENT_PATIENT = QtCore.Qt.AlignCenter
-ACT_TABLE_ALIGNEMENT_NOTES = QtCore.Qt.AlignCenter
-ACT_TABLE_ALIGNEMENT_FLOATS = QtCore.Qt.AlignCenter
-
 HASH_ROLE = 1000
+
+########################
+# Qt dependent settings
+########################
+
+#Alignment
+ACT_TABLE_ALIGNEMENT_DATE = QtCore.Qt.AlignCenter
+ACT_TABLE_ALIGNEMENT_TYPE = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
+ACT_TABLE_ALIGNEMENT_PATIENT = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
+ACT_TABLE_ALIGNEMENT_NOTES = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
+ACT_TABLE_ALIGNEMENT_FLOATS = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
+
+#Font: QFont(const QString & family, int pointSize = -1, int weight = -1, bool italic = false)
+sFont = APP_SETTINGS_TABLE_ACTS_FONT
+iFontSize = APP_SETTINGS_TABLE_ACTS_FONTSIZE
+ACT_TABLE_FONT_DATE = QtGui.QFont(sFont, iFontSize, QtGui.QFont.Normal)
+ACT_TABLE_FONT_TYPE = QtGui.QFont(sFont, iFontSize, QtGui.QFont.Bold)
+ACT_TABLE_FONT_PATIENT = QtGui.QFont(sFont, iFontSize)
+ACT_TABLE_FONT_NOTES = QtGui.QFont(sFont, iFontSize)
+ACT_TABLE_FONT_FLOATS = QtGui.QFont(sFont, iFontSize, QtGui.QFont.Normal, True)
+
+SETTINGS_ACTNAME_ALIGNEMENT = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
 
 # ***********************************************************************
 # ***********************************************************************
@@ -67,7 +83,7 @@ def toolkit_populate_table_from_dict(table_widget, values_dict):
 
 def toolkit_create_formatted_cell(table_widget, iRow, iCol, value):
     qItem = QtGui.QTableWidgetItem(value)
-    qItem.setTextAlignment( QtCore.Qt.AlignCenter )
+    qItem.setTextAlignment( SETTINGS_ACTNAME_ALIGNEMENT )
     sFont = APP_SETTINGS_TABLE_DEFAULTACTS_FONT
     iFontSize = APP_SETTINGS_TABLE_DEFAULTACTS_FONTSIZE
     qItem.setFont(QtGui.QFont(sFont, iFontSize, QtGui.QFont.Bold))
@@ -77,7 +93,7 @@ def toolkit_create_formatted_cell(table_widget, iRow, iCol, value):
 def toolkit_format_existing_cell(table_widget, iRow, iCol):
     qItem = table_widget.item(iRow, iCol)
     qItem.setText(qItem.text().upper())
-    qItem.setTextAlignment( QtCore.Qt.AlignCenter )
+    qItem.setTextAlignment( SETTINGS_ACTNAME_ALIGNEMENT )
     sFont = APP_SETTINGS_TABLE_DEFAULTACTS_FONT
     iFontSize = APP_SETTINGS_TABLE_DEFAULTACTS_FONTSIZE
     qItem.setFont(QtGui.QFont(sFont, iFontSize, QtGui.QFont.Bold))
@@ -156,13 +172,13 @@ class DoctorTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
         QtGui.QTableView.__init__(self, *args, **kwargs)
         
-    def focusOutEvent(self, event):
-        # self.setFocus(QtCore.Qt.StrongFocus)
-        selectionModel = self.selectionModel()
-        selectedIndexes = selectionModel.selectedIndexes()
-        qIndex = selectedIndexes[0]
-        if not qIndex.isValid(): return 0
-        selectionModel.select(qIndex, QtGui.QItemSelectionModel.Deselect)
+    # def focusOutEvent(self, event):
+    #     # self.setFocus(QtCore.Qt.StrongFocus)
+    #     selectionModel = self.selectionModel()
+    #     selectedIndexes = selectionModel.selectedIndexes()
+    #     qIndex = selectedIndexes[0]
+    #     if not qIndex.isValid(): return 0
+    #     selectionModel.select(qIndex, QtGui.QItemSelectionModel.Deselect)
 
 
 class ActTableView(QtGui.QTableView):
@@ -211,6 +227,19 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
         
         if not index.isValid(): 
             return None
+
+        # BackgroundRole
+        elif role == QtCore.Qt.FontRole:
+            if iCol in [COL_ACTUNITPRICE, COL_ACTQTY, COL_ACTSUBTOTAL]:
+                return ACT_TABLE_FONT_FLOATS
+            elif iCol == COL_ACTTYPE:
+                return ACT_TABLE_FONT_TYPE
+            elif iCol == COL_ACTPATIENT:
+                return ACT_TABLE_FONT_PATIENT
+            elif iCol == COL_ACTDATE:
+                return ACT_TABLE_FONT_DATE
+            elif iCol == COL_ACTNOTES:
+                return ACT_TABLE_FONT_NOTES
 
         elif role == QtCore.Qt.TextAlignmentRole:
             if iCol in [COL_ACTUNITPRICE, COL_ACTQTY, COL_ACTSUBTOTAL]:
@@ -275,6 +304,7 @@ class ActTableModelNew(QtCore.QAbstractTableModel):
                 # if value == "": value = self.data(index)
                 dentalAct.SetVarDate(value)
             elif iCol == COL_ACTTYPE:
+                if val == "": return False
                 dentalAct.SetVarType(value, self.defaultPrices[value])
             elif iCol == COL_ACTNOTES:
                 dentalAct.SetVarNotes(value)

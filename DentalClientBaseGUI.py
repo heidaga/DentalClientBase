@@ -350,6 +350,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
         # TABLE VIEW : DOCTORS
         table_view = self.ui.m_tableclients
+        # table_view.setWordWrap(True)
         table_view.setModel(self.TableModelDoctors)
         table_view.setShowGrid(False)
         table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -369,6 +370,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         
         # TABLE VIEW : ACTS
         table_view = self.ui.m_tableacts
+        table_view.setWordWrap(True)
         table_view.setModel(self.TableModelActs)
         table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked ) # AllEditTriggers # NoEditTriggers 
         table_view.setDragDropOverwriteMode(False)
@@ -394,7 +396,16 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ActiveClientID = None
         self.LastKnownActType = ""
 
+        self.InitStyle()
+        
     # ********************************************************************************
+
+    def InitStyle(self):
+        self.ui.PB_ExportInvoice.setStyleSheet("Text-align:left")
+        self.ui.PB_OpenInvoiceFolder.setStyleSheet("Text-align:left")
+        self.ui.PB_Calculator.setStyleSheet("Text-align:left")
+        self.ui.PB_Settings.setStyleSheet("Text-align:left")
+        return 0
 
     ###### Member functions related to Qt
 
@@ -479,7 +490,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # increment invoice counter after successful export 
         if sExportedInvoice != "" :
             self.appsettings.SetLastInvoiceNo(iInvoiceID)
-            webbrowser.open_new_tab(filename)
+            webbrowser.open_new_tab(sExportedInvoice)
         return 0
 
     # **********  TABLE ACTS EVENTS ***********************

@@ -347,16 +347,7 @@ if __name__ == '__main__':
 		for doctor in list_doctors:
 			print "Dr.", doctor.GetFullName()
 
-
-	def test3():
-		# with open(r"C:\Users\RASPI\Desktop\Misc_coding\clientdatabase-tableview\res\DefaultPricesoooo.dat", 'r') as fo:
-			# print "opening file 1 succeeded"
-		with open(r"C:\Users\RASPI\Desktop\Misc_coding\clientdatabase-tableview\res\DefaultPrices.dat", 'r') as fo:
-			print "opening file 2 succeeded"
-
-
-	# test()
-	# test2()
-	# test3()
+	test()
+	test2()
 
 	
