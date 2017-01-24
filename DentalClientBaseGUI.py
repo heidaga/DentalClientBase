@@ -1,5 +1,5 @@
 ﻿# VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       9       .           0         .         0      '
+__version__ =  '      0       .       9       .           0         .         2      '
 
 """
 # Client Databse app for managing contacts and dental acts
@@ -50,7 +50,7 @@ class GeneralSettings(QtGui.QMainWindow):
 
     	self.ui = ui_windowsettings.Ui_AppCentralWidget()
     	self.ui.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon(APP_LOGO_PATH))
+        self.setWindowIcon(QtGui.QIcon(APP_LOGO_PNG_PATH))
         self.setWindowTitle("General Settings")
         
         # Background Color hotfix for central UI widget 
@@ -293,7 +293,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     	self.ui = ui_windowmain.Ui_AppCentralWidget()
     	self.ui.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon(APP_LOGO_PATH))
+        self.setWindowIcon(QtGui.QIcon(APP_LOGO_PNG_PATH))
         self.setWindowTitle(APP_NAME+" "+APP_LICENSE)
         self.ui.banner.setIcon(QtGui.QIcon(APP_BANNER_PATH))
         

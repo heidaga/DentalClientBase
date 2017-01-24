@@ -34,12 +34,9 @@ import re
 ## libiomp5md.dll 
 ## libmmd.dll 
 
-from DentalClientBaseSettings import APP_RESOURCES
+from DentalClientBaseSettings import APP_LOGO_ICO_PATH, APP_MAIN_SCRIPT
 verbose = False
-py_source_name =  'DentalClientBaseGUI.py'
-resource_folder = APP_RESOURCES
-app_logo = "logonew.ico"
-app_logo_path = os.path.join(APP_RESOURCES, app_logo)
+
 
 sys.argv.append('py2exe')
 
@@ -83,14 +80,14 @@ def main():
 
     code = setup(
                 windows=[{
-		                    'script': py_source_name,
-		                    'icon_resources':[(1, app_logo_path)],
+		                    'script': APP_MAIN_SCRIPT,
+		                    'icon_resources':[(1, APP_LOGO_ICO_PATH)],
 		                    # 'bitmap_resources ':bitmap_resources,
 		                    # other_resources = [get_manifest_resource("Your app name")],
 		                    "dest_base" : "DentalClientBase",   #exe name
 		                    "copyright" : "Copyright (c) 2017 Ali Saad",
 		                    "company_name" : "Ali Saad Developments",
-		                    "version" : "".join(grep('__version__',py_source_name).split()),
+		                    "version" : "".join(grep('__version__',APP_MAIN_SCRIPT).split()),
 		                    "Name" : "Dental Client Base", # name in properties
                 }],
                 zipfile=None,

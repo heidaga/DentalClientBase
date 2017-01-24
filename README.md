@@ -2,6 +2,9 @@
 
 # Changelog
 
+* v0.9.0.2:
+- bug fix in py2exe setup (wrong path to icon)
+
 * v0.9.0.1:
 - bug fix in installer batch
 
