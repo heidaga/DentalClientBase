@@ -14,10 +14,12 @@ pyside-rcc.exe  mainwindow.qrc -o mainwindow_rc.py
 :: py2exe additional argument is appended internally in the script
 python setup.py
 
+
 ::http://www.jrsoftware.org/ishelp/index.php?topic=compilercmdline
-iscc /Qp InnoScript.iss
+iscc /Qp InstallScript.iss
 
 robocopy Output . *.exe  /NFL /NDL /NJH /NJS /nc /ns /np
+robocopy Output "C:\Users\RASPI\Google Drive\MISC Shared Folder\DentalClientBase-Installers" *.exe  /NFL /NDL /NJH /NJS /nc /ns /np
 
 :: clean
 RMDIR Output /S /Q
@@ -25,3 +27,4 @@ RMDIR dist /S /Q
 RMDIR build /S /Q
 REM rem del mainwindow_rc.py /Q
 ::del mainwindow_rc.pyc /F /Q
+

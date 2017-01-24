@@ -2,6 +2,9 @@
 
 # Changelog
 
+* v0.9.0.1:
+- bug fix in installer batch
+
 * v0.9.0.0:
 - finished implementation of payments table
 
