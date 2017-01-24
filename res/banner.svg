@@ -27,16 +27,16 @@
      inkscape:cx="22.938188"
      inkscape:cy="432.86033"
      inkscape:document-units="px"
-     inkscape:current-layer="g4442"
+     inkscape:current-layer="layer1"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1920"
-     inkscape:window-height="1018"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:window-width="944"
+     inkscape:window-height="1002"
+     inkscape:window-x="960"
+     inkscape:window-y="0"
      inkscape:window-maximized="1" />
   <defs
      id="defs3883">
@@ -81,6 +81,39 @@
        x2="1535.4181"
        y2="584.91305"
        gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3758"
+       id="radialGradient3764"
+       cx="1293.2939"
+       cy="596.45795"
+       fx="1293.2939"
+       fy="596.45795"
+       r="328.79623"
+       gradientTransform="matrix(-0.60988264,-0.63966752,1.2188479,-1.1620947,1355.06,2116.8767)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       id="linearGradient3758">
+      <stop
+         style="stop-color:#4b39ff;stop-opacity:1;"
+         offset="0"
+         id="stop3760" />
+      <stop
+         style="stop-color:#000b60;stop-opacity:0;"
+         offset="1"
+         id="stop3762" />
+    </linearGradient>
+    <radialGradient
+       r="328.79623"
+       fy="596.45795"
+       fx="1293.2939"
+       cy="596.45795"
+       cx="1293.2939"
+       gradientTransform="matrix(-0.60988264,-0.63966752,1.2188479,-1.1620947,1355.5735,2118.4241)"
+       gradientUnits="userSpaceOnUse"
+       id="radialGradient3045"
+       xlink:href="#linearGradient3758"
+       inkscape:collect="always" />
   </defs>
   <metadata
      id="metadata3886">
@@ -143,11 +176,11 @@
              height="46.467018"
              x="131.31982"
              y="-203.05743" /></flowRegion><flowPara
-           id="flowPara3002"></flowPara></flowRoot>    </g>
+           id="flowPara3002" /></flowRoot>    </g>
     <path
        inkscape:connector-curvature="0"
        id="path86"
-       style="fill:#000b60;fill-opacity:0.12698413;fill-rule:nonzero;stroke:none"
-       d="m 1293.294,267.66168 c -181.2988,0 -328.79629,147.4975 -328.79629,328.79625 0,181.29875 147.49749,328.79625 328.79629,328.79625 181.2987,0 328.7962,-147.4975 328.7962,-328.79625 0,-181.29875 -147.4975,-328.79625 -328.7962,-328.79625 l 0,0 z m 0,24.80875 c 167.8875,0 303.9875,136.1 303.9875,303.9875 0,167.8875 -136.1,303.9875 -303.9875,303.9875 -167.8875,0 -303.98754,-136.1 -303.98754,-303.9875 0,-167.8875 136.10004,-303.9875 303.98754,-303.9875" />
+       style="fill:url(#radialGradient3045);fill-opacity:1;fill-rule:nonzero;stroke:none"
+       d="m 1293.8075,269.20915 c -181.2988,0 -328.79631,147.4975 -328.79631,328.79625 0,181.29875 147.49751,328.79625 328.79631,328.79625 181.2987,0 328.7962,-147.4975 328.7962,-328.79625 0,-181.29875 -147.4975,-328.79625 -328.7962,-328.79625 l 0,0 z m 0,24.80875 c 167.8875,0 303.9875,136.1 303.9875,303.9875 0,167.8875 -136.1,303.9875 -303.9875,303.9875 -167.8875,0 -303.98756,-136.1 -303.98756,-303.9875 0,-167.8875 136.10006,-303.9875 303.98756,-303.9875" />
   </g>
 </svg>

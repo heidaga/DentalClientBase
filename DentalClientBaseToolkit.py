@@ -185,167 +185,7 @@ class ActTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
         QtGui.QTableView.__init__(self, *args, **kwargs)
 
-class ActTableModelNew(QtCore.QAbstractTableModel):
-    def __init__(self, parent, *args):
-        QtCore.QAbstractTableModel.__init__(self, parent, *args)
-
-        self.database = parent.ParsedDentalDatabase
-        self.defaultPrices = parent.DefaultActsDict
-        self.doctorID = -1
-        self.mylist = [] #initially not showing anything
-        self.bUpToDate = True
-        self.header = ACTS_HEADER_DICT.values()
-    # ***************************************************    
-    #private get set functions
-
-    def SetModelForDoctorByID(self, iDoctorID):
-        """ table view using this model shoud use SetModel 
-        after a call to this function """
-        self.beginResetModel()
-        self.mylist = self.database.GetListActsByDoctorID(iDoctorID)
-        self.endResetModel()
-        return
-    # ***************************************************
-    def IsUpToDate(self):
-        """ return boolean to check if user changed values """
-        return self.bUpToDate
-    # ***************************************************
-
-    def rowCount(self, parent):
-        return len(self.mylist)
-    
-    def columnCount(self, parent):
-        if len(self.mylist) == 0: 
-            return len(self.header)
-        else:
-            return len(self.mylist[0])
-    
-    def data(self, index, role = QtCore.Qt.DisplayRole):
-        iRow = index.row()
-        iCol = index.column()
-        dentalActAtRow = self.mylist[iRow]
-        
-        if not index.isValid(): 
-            return None
-
-        # BackgroundRole
-        elif role == QtCore.Qt.FontRole:
-            if iCol in [COL_ACTUNITPRICE, COL_ACTQTY, COL_ACTSUBTOTAL]:
-                return ACT_TABLE_FONT_FLOATS
-            elif iCol == COL_ACTTYPE:
-                return ACT_TABLE_FONT_TYPE
-            elif iCol == COL_ACTPATIENT:
-                return ACT_TABLE_FONT_PATIENT
-            elif iCol == COL_ACTDATE:
-                return ACT_TABLE_FONT_DATE
-            elif iCol == COL_ACTNOTES:
-                return ACT_TABLE_FONT_NOTES
-
-        elif role == QtCore.Qt.TextAlignmentRole:
-            if iCol in [COL_ACTUNITPRICE, COL_ACTQTY, COL_ACTSUBTOTAL]:
-                return ACT_TABLE_ALIGNEMENT_FLOATS
-            elif iCol == COL_ACTTYPE:
-                return ACT_TABLE_ALIGNEMENT_TYPE
-            elif iCol == COL_ACTPATIENT:
-                return ACT_TABLE_ALIGNEMENT_PATIENT
-            elif iCol == COL_ACTDATE:
-                return ACT_TABLE_ALIGNEMENT_DATE
-            elif iCol == COL_ACTNOTES:
-                return ACT_TABLE_ALIGNEMENT_NOTES
-
-        elif role == QtCore.Qt.DisplayRole:
-            if iCol < 0 or iCol > self.columnCount(None): return None
-            # `__getitem__` used also by "sorted"
-            val = dentalActAtRow.__getitem__(iCol)
-            if iCol == COL_ACTDATE: 
-                qDate = QtCore.QDate.fromString(val, APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
-                return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
-            else: 
-                return val
-        
-        # elif role == QtCore.Qt.BackgroundRole:
-        #     iPaid = dentalActAtRow.__getitem__(COL_ACTPAID)
-        #     if(iPaid == 1): 
-        #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.blue)
-        #     else:
-        #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.white)
-
-    def headerData(self, col, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self.header[col]
-        return None
-
-    def sort(self, col, order):
-        """sort table by given column number col"""
-        # self.emit(SIGNAL("layoutAboutToBeChanged()"))
-        self.layoutAboutToBeChanged.emit()
-        """
-        IMPORTANT: itemgetter is needed to determine a value at position
-        it only works with standard containers unless i reimplement the 
-        method __getitem__
-        """
-        self.mylist = sorted(self.mylist, key=operator.itemgetter(col))
-        if order == QtCore.Qt.DescendingOrder: self.mylist.reverse()
-        self.layoutChanged.emit()
-   
-
-    # To enable editing in your model, you must also implement setData(), 
-    # and reimplement flags() to ensure that ItemIsEditable is returned
-    def setData(self, index, value, role=QtCore.Qt.DisplayRole):
-        if(role == QtCore.Qt.EditRole):
-            iRow = index.row()
-            iCol = index.column()            
-            dentalAct = self.mylist[iRow]
-            self.bUpToDate = False
-
-            if iCol < 0 or iCol > self.columnCount(None): 
-                return None
-            elif iCol == COL_ACTDATE:
-                # if value == "": value = self.data(index)
-                dentalAct.SetVarDate(value)
-            elif iCol == COL_ACTTYPE:
-                if val == "": return False
-                dentalAct.SetVarType(value, self.defaultPrices[value])
-            elif iCol == COL_ACTNOTES:
-                dentalAct.SetVarNotes(value)
-            elif iCol == COL_ACTUNITPRICE:
-                # if value == "": value = self.data(index)
-                dentalAct.SetVarUnitPrice(value)
-            elif iCol == COL_ACTQTY: 
-                dentalAct.SetVarQty(value)
-            elif iCol == COL_ACTSUBTOTAL: 
-                return False 
-            elif iCol == COL_ACTPAID: 
-                dentalAct.SetVarPaid(value)
-            elif iCol == COL_ACTPATIENT: 
-                dentalAct.SetVarPatientName(value)
-
-            self.dataChanged.emit(index, index)
-            return True
-        return False
-
-    def flags(self, index):
-        if index.column in [ COL_ACTSUBTOTAL, COL_ACTDATE] :
-            return QtCore.Qt.NoItemFlags
-        else: 
-            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable  
-
-    def addDentalAct(self, iDoctorID, dentalActInstance):
-        count = self.database.GetNbActsByDoctorID(iDoctorID)
-        self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
-        self.database.AppendActByInstanceToDoctorByID(iDoctorID, dentalActInstance)
-        self.endInsertRows()
-        self.bUpToDate = False
-
-    def removeDentalAct(self, iDoctorID, iRowIndex):
-        count = self.database.GetNbActsByDoctorID(iDoctorID)
-        self.beginRemoveRows(QtCore.QModelIndex(), count, count-1)
-        self.database.RemoveActByIndexByDoctorID(iDoctorID, iRowIndex)
-        self.endRemoveRows()
-        self.layoutChanged.emit()
-        self.bUpToDate = False
-
-class DoctorTableModelNew(QtCore.QAbstractTableModel):
+class DoctorTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
 
@@ -483,6 +323,291 @@ class DoctorTableModelNew(QtCore.QAbstractTableModel):
         self.layoutChanged.emit()
         self.bUpToDate = False
   
+class ActTableModel(QtCore.QAbstractTableModel):
+    def __init__(self, parent, *args):
+        QtCore.QAbstractTableModel.__init__(self, parent, *args)
+
+        self.database = parent.ParsedDentalDatabase
+        self.defaultPrices = parent.DefaultActsDict
+        self.doctorID = -1
+        self.mylist = [] #initially not showing anything
+        self.bUpToDate = True
+        self.header = ACTS_HEADER_DICT.values()
+    # ***************************************************    
+    #private get set functions
+
+    def SetModelForDoctorByID(self, iDoctorID):
+        """ table view using this model shoud use SetModel 
+        after a call to this function """
+        self.beginResetModel()
+        self.mylist = self.database.GetListActsByDoctorID(iDoctorID)
+        self.endResetModel()
+        return
+    # ***************************************************
+    def IsUpToDate(self):
+        """ return boolean to check if user changed values """
+        return self.bUpToDate
+    # ***************************************************
+
+    def rowCount(self, parent):
+        return len(self.mylist)
+    
+    def columnCount(self, parent):
+        if len(self.mylist) == 0: 
+            return len(self.header)
+        else:
+            return len(self.mylist[0])
+    
+    def data(self, index, role = QtCore.Qt.DisplayRole):
+        iRow = index.row()
+        iCol = index.column()
+        dentalActAtRow = self.mylist[iRow]
+        
+        if not index.isValid(): 
+            return None
+
+        # BackgroundRole
+        elif role == QtCore.Qt.FontRole:
+            if iCol in [COL_ACTUNITPRICE, COL_ACTQTY, COL_ACTSUBTOTAL]:
+                return ACT_TABLE_FONT_FLOATS
+            elif iCol == COL_ACTTYPE:
+                return ACT_TABLE_FONT_TYPE
+            elif iCol == COL_ACTPATIENT:
+                return ACT_TABLE_FONT_PATIENT
+            elif iCol == COL_ACTDATE:
+                return ACT_TABLE_FONT_DATE
+            elif iCol == COL_ACTNOTES:
+                return ACT_TABLE_FONT_NOTES
+
+        elif role == QtCore.Qt.TextAlignmentRole:
+            if iCol in [COL_ACTUNITPRICE, COL_ACTQTY, COL_ACTSUBTOTAL]:
+                return ACT_TABLE_ALIGNEMENT_FLOATS
+            elif iCol == COL_ACTTYPE:
+                return ACT_TABLE_ALIGNEMENT_TYPE
+            elif iCol == COL_ACTPATIENT:
+                return ACT_TABLE_ALIGNEMENT_PATIENT
+            elif iCol == COL_ACTDATE:
+                return ACT_TABLE_ALIGNEMENT_DATE
+            elif iCol == COL_ACTNOTES:
+                return ACT_TABLE_ALIGNEMENT_NOTES
+
+        elif role == QtCore.Qt.DisplayRole:
+            if iCol < 0 or iCol > self.columnCount(None): return None
+            # `__getitem__` used also by "sorted"
+            val = dentalActAtRow.__getitem__(iCol)
+            if iCol == COL_ACTDATE: 
+                qDate = QtCore.QDate.fromString(val, APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
+                return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            else: 
+                return val
+        
+        # elif role == QtCore.Qt.BackgroundRole:
+        #     iPaid = dentalActAtRow.__getitem__(COL_ACTPAID)
+        #     if(iPaid == 1): 
+        #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.blue)
+        #     else:
+        #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.white)
+
+    def headerData(self, col, orientation, role):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            return self.header[col]
+        return None
+
+    def sort(self, col, order):
+        """sort table by given column number col"""
+        # self.emit(SIGNAL("layoutAboutToBeChanged()"))
+        self.layoutAboutToBeChanged.emit()
+        """
+        IMPORTANT: itemgetter is needed to determine a value at position
+        it only works with standard containers unless i reimplement the 
+        method __getitem__
+        """
+        self.mylist = sorted(self.mylist, key=operator.itemgetter(col))
+        if order == QtCore.Qt.DescendingOrder: self.mylist.reverse()
+        self.layoutChanged.emit()
+   
+
+    # To enable editing in your model, you must also implement setData(), 
+    # and reimplement flags() to ensure that ItemIsEditable is returned
+    def setData(self, index, value, role=QtCore.Qt.DisplayRole):
+        if(role == QtCore.Qt.EditRole):
+            iRow = index.row()
+            iCol = index.column()            
+            dentalAct = self.mylist[iRow]
+            self.bUpToDate = False
+
+            if iCol < 0 or iCol > self.columnCount(None): 
+                return None
+            elif iCol == COL_ACTDATE:
+                # if value == "": value = self.data(index)
+                dentalAct.SetVarDate(value)
+            elif iCol == COL_ACTTYPE:
+                if value == "": return False
+                dentalAct.SetVarType(value, self.defaultPrices[value])
+            elif iCol == COL_ACTNOTES:
+                dentalAct.SetVarNotes(value)
+            elif iCol == COL_ACTUNITPRICE:
+                # if value == "": value = self.data(index)
+                dentalAct.SetVarUnitPrice(value)
+            elif iCol == COL_ACTQTY: 
+                dentalAct.SetVarQty(value)
+            elif iCol == COL_ACTSUBTOTAL: 
+                return False 
+            elif iCol == COL_ACTPAID: 
+                dentalAct.SetVarPaid(value)
+            elif iCol == COL_ACTPATIENT: 
+                dentalAct.SetVarPatientName(value)
+
+            self.dataChanged.emit(index, index)
+            return True
+        return False
+
+    def flags(self, index):
+        if index.column in [ COL_ACTSUBTOTAL, COL_ACTDATE] :
+            return QtCore.Qt.NoItemFlags
+        else: 
+            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable  
+
+    def addDentalAct(self, iDoctorID, dentalActInstance):
+        count = self.database.GetNbActsByDoctorID(iDoctorID)
+        self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
+        self.database.AppendActByInstanceToDoctorByID(iDoctorID, dentalActInstance)
+        self.endInsertRows()
+        self.bUpToDate = False
+
+    def removeDentalAct(self, iDoctorID, iRowIndex):
+        count = self.database.GetNbActsByDoctorID(iDoctorID)
+        self.beginRemoveRows(QtCore.QModelIndex(), count, count-1)
+        self.database.RemoveActByIndexByDoctorID(iDoctorID, iRowIndex)
+        self.endRemoveRows()
+        self.layoutChanged.emit()
+        self.bUpToDate = False
+
+class PaymentTableModel(QtCore.QAbstractTableModel):
+    def __init__(self, parent, *args):
+        QtCore.QAbstractTableModel.__init__(self, parent, *args)
+
+        self.database = parent.ParsedDentalDatabase
+        self.doctorID = -1
+        self.mylist = [] #initially not showing anything
+        self.bUpToDate = True
+        self.header = PAYMENTS_HEADER_DICT.values()
+    # ***************************************************    
+    #private get set functions
+
+    def SetModelForDoctorByID(self, iDoctorID):
+        """ table view using this model shoud use SetModel 
+        after a call to this function """
+        self.beginResetModel()
+        self.mylist = self.database.GetListPaymentsByDoctorID(iDoctorID)
+        self.endResetModel()
+        return
+    # ***************************************************
+    def IsUpToDate(self):
+        """ return boolean to check if user changed values """
+        return self.bUpToDate
+    # ***************************************************
+
+    def rowCount(self, parent):
+        return len(self.mylist)
+    
+    def columnCount(self, parent):
+        if len(self.mylist) == 0: 
+            return len(self.header)
+        else:
+            return len(self.mylist[0])
+    
+    def data(self, index, role = QtCore.Qt.DisplayRole):
+        iRow = index.row()
+        iCol = index.column()
+        dentalPaymentAtRow = self.mylist[iRow]
+        
+        if not index.isValid(): 
+            return None
+
+        # BackgroundRole
+        elif role == QtCore.Qt.FontRole:
+            if iCol == COL_PAYMENTSUM:
+                return ACT_TABLE_FONT_FLOATS
+            elif iCol == COL_PAYMENTDATE:
+                return ACT_TABLE_FONT_DATE
+
+        elif role == QtCore.Qt.TextAlignmentRole:
+            if iCol == COL_PAYMENTSUM:
+                return ACT_TABLE_ALIGNEMENT_FLOATS
+            elif iCol == COL_PAYMENTDATE:
+                return ACT_TABLE_ALIGNEMENT_DATE
+
+        elif role == QtCore.Qt.DisplayRole:
+            if iCol < 0 or iCol > self.columnCount(None): return None
+            # `__getitem__` used also by "sorted"
+            val = dentalPaymentAtRow.__getitem__(iCol)
+            if iCol == COL_PAYMENTDATE: 
+                qDate = QtCore.QDate.fromString(val, APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
+                return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            else: 
+                return val
+
+    def headerData(self, col, orientation, role):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            return self.header[col]
+        return None
+
+    def sort(self, col, order):
+        """sort table by given column number col"""
+        # self.emit(SIGNAL("layoutAboutToBeChanged()"))
+        self.layoutAboutToBeChanged.emit()
+        """
+        IMPORTANT: itemgetter is needed to determine a value at position
+        it only works with standard containers unless i reimplement the 
+        method __getitem__
+        """
+        self.mylist = sorted(self.mylist, key=operator.itemgetter(col))
+        if order == QtCore.Qt.DescendingOrder: self.mylist.reverse()
+        self.layoutChanged.emit()
+   
+
+    def setData(self, index, value, role=QtCore.Qt.DisplayRole):
+        if(role == QtCore.Qt.EditRole):
+            iRow = index.row()
+            iCol = index.column()            
+            dentalPayment = self.mylist[iRow]
+            self.bUpToDate = False
+
+            if iCol < 0 or iCol > self.columnCount(None): 
+                return None
+            elif iCol == COL_PAYMENTDATE:
+                # if value == "": value = self.data(index)
+                dentalPayment.SetVarDate(value)
+            elif iCol == COL_PAYMENTSUM:
+                # if value == "": value = self.data(index)
+                dentalPayment.SetVarSum(value)
+
+            self.dataChanged.emit(index, index)
+            return True
+        return False
+
+    def flags(self, index):
+        if index.column in [ COL_PAYMENTDATE] :
+            return QtCore.Qt.NoItemFlags
+        else: 
+            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable  
+
+    def addDentalPayment(self, iDoctorID, dentalPaymentInstance):
+        count = self.database.GetNbActsByDoctorID(iDoctorID)
+        self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
+        self.database.AppendPaymentByInstanceToDoctorByID(iDoctorID, dentalPaymentInstance)
+        self.endInsertRows()
+        self.bUpToDate = False
+
+    def removeDentalPayment(self, iDoctorID, iRowIndex):
+        count = self.database.GetNbActsByDoctorID(iDoctorID)
+        self.beginRemoveRows(QtCore.QModelIndex(), count, count-1)
+        self.database.RemovePaymentByIndexByDoctorID(iDoctorID, iRowIndex)
+        self.endRemoveRows()
+        self.layoutChanged.emit()
+        self.bUpToDate = False
+
 class DentalActDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None, argItemsList = []):
         QtGui.QStyledItemDelegate.__init__(self, parent)
@@ -547,7 +672,7 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
         elif editor.metaObject().className() == "QComboBox":
             sComboText = editor.currentText().upper()
             sModelText = index.model().data(index).upper()
-            if sModelText == "" :
+            if sModelText == "" or sModelText == sComboText:
                 model.setData(index, sComboText, QtCore.Qt.EditRole)
             else:
                 sMsg = "Changing the type of act will remove the current unit price.\n"

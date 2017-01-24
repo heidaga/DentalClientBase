@@ -93,6 +93,17 @@ ACT_TABLE_COLUMNSIZE_TOTAL 		= 75
 
 
 #########################
+# TABLE- PAYMENTS
+#########################
+APP_SETTINGS_TABLE_PAYMENTS_FONT = "MS Shell Dlg 2" #"Courier New" 
+APP_SETTINGS_TABLE_PAYMENTS_FONTSIZE = 10
+
+# Column indices - enum style
+COL_PAYMENTDATE     = 0
+COL_PAYMENTSUM      = 1 
+
+
+#########################
 # TABLE- DEFAULT ACTS
 #########################
 APP_SETTINGS_TABLE_DEFAULTACTS_FONT = "MS Shell Dlg 2" 
@@ -140,3 +151,7 @@ DOCTORS_HEADER_DICT = dict()
 DOCTORS_HEADER_DICT[COL_DRFIRSTNAME] = 'First Name'
 DOCTORS_HEADER_DICT[COL_DRLASTNAME] = 'Last Name'
 DOCTORS_HEADER_DICT[COL_DRPHONE] = 'Phone Number'
+
+PAYMENTS_HEADER_DICT = dict() 
+PAYMENTS_HEADER_DICT[COL_PAYMENTDATE] = 'Date'
+PAYMENTS_HEADER_DICT[COL_PAYMENTSUM] = 'Received Sum'

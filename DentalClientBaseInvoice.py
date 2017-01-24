@@ -6,7 +6,7 @@ http://pbpython.com/pdf-reports.html
 
 """
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
+# from weasyprint import HTML
 import os
 import base64
 
@@ -85,7 +85,7 @@ def to_html_acts_header_and_details(listOfDentalActInstances, mode = 1):
     return s
 
 
-def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs):
+def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs, listDentalPayments):
     
     sActualDate = "01-{0}-{1}".format(sMonth, sYear)
     sDueDate = str()
@@ -97,8 +97,10 @@ def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs):
 
     css_style = 1
     act_headers_and_details = to_html_acts_header_and_details(listDentalActs, css_style)
-    fPaid = 100.0
+    fPaid = 0.0
     fGrandTotal = 0.0
+    for jPayment in listDentalPayments:
+        fPaid += jPayment.Sum
     for jAct in listDentalActs:
         fGrandTotal += jAct.SubTotal
 
@@ -152,12 +154,12 @@ if __name__ == "__main__":
         list_doctors = ParsedDatabase.GetListDoctors()
         last_doctor = list_doctors[-1]
         list_of_acts = ParsedDatabase.GetListActsByDoctorID(last_doctor.id())
+        list_of_payments = ParsedDatabase.GetListPaymentsByDoctorID(last_doctor.id())
 
-        ExportInvoice(56, last_doctor, list_of_acts)
-
+        sPathToInvoice = str()
+        sPathToInvoice = ExportInvoice(56, "02" , "2016", last_doctor, list_of_acts, list_of_payments)
 
     test()
-
 
 """
 Template tags

@@ -136,27 +136,42 @@ class DentalClient:
 		self.Address = address 		# string optional
 
 		self.acts = list()
+		self.payments = list()
 		self.defaultprices = dict()
 
 	def __len__(self):
 		""" returns number of member variables to be used externally (by Qt) """
 		return 3
 
-	def AppendActByDetails(self, sDate, sPatientName, sType, iQty, fUnitPrice):
+	def AppendPaymentByDetails(self, sDate, fSum):
+		cNewPayment = DentalPayment(sDate, fSum)
+		self.payments.append(cNewPayment)
+
+		
+	def AppendActByDetails(self, sDate, sPatientName, sType, iQty):
+		if not sType in self.defaultprices:
+			print("Warning::AppendActByDetails: sType {0} not found".format(sType))
+			return
+		fUnitPrice = self.defaultprices[sType]
 		cNewAct = DentalAct(sDate, sPatientName, sType, iQty, fUnitPrice)
 		self.acts.append(cNewAct)
 		
-	def AppendActByInstance(self, cNewAct):
-		if cNewAct is None: 
-			raise Exception("AddActToDoctor:: dentalAct is None")
-			return 0
-		else:
-			self.acts.append(cNewAct)
-		return 0
+	# def AppendActByInstance(self, cNewAct):
+	# 	if cNewAct is None: 
+	# 		raise Exception("AddActToDoctor:: dentalAct is None")
+	# 		return 0
+	# 	else:
+	# 		self.acts.append(cNewAct)
+	# 	return 0
 		
-	def RemoveActByIndex(self, iActIndex):
-		if iActIndex < 0: return 0
-		else: del self.acts[iActIndex]
+	def RemovePaymentByIndex(self, iIndex):
+		if iIndex < 0: return 0
+		else: del self.payments[iIndex]
+		return 0
+	
+	def RemoveActByIndex(self, iIndex):
+		if iIndex < 0: return 0
+		else: del self.acts[iIndex]
 		return 0
 
 	def id(self):
@@ -181,7 +196,7 @@ class DentalClient:
 		then the output value is Qt-formatted in the GUI class 
 	"""
 
-	def AssignDoctorPrices(self, dictOfDefaultPrices):
+	def AssignPersonalDefaultPrices(self, dictOfDefaultPrices):
 		self.defaultprices = dict(dictOfDefaultPrices)
 		return
 
@@ -198,6 +213,52 @@ class DentalClient:
 # ***********************************************************************
 # ***********************************************************************
 
+class DentalPayment:
+	""" Implementation of a single dental payment """
+
+	def __init__(self, sDate, fSum = 0.0):
+		
+		# self.client = ObjClient # no need anymore coz instanciated as part of DentalClient
+		self.Date = sDate
+		self.Sum = fSum
+
+	def __len__(self):
+		""" returns number of member variables to be used externally (by Qt) """
+		return 2
+
+	def GetMonth(self):
+		# ATTENTION: APP_SETTINGS_ACTDATE_FORMAT_DISPLAY
+		return str(self.Date.split("/")[1])
+
+	def GetYear(self):
+		# ATTENTION: APP_SETTINGS_ACTDATE_FORMAT_DISPLAY
+		return str(self.Date.split("/")[2])
+
+	def SetVarDate(self, sDate):
+		self.Date = str(sDate)
+		return 0
+
+	def SetVarSum(self, fSum):
+		self.Sum = fSum
+		return 0
+
+	""" ONLY FOR SORTING : acts as a getter 
+		To sort dates, i only return the date string
+		then the output value is Qt-formatted in the GUI class 
+	"""
+	def __getitem__(self, iCol):
+		if iCol == COL_PAYMENTDATE: 
+			return self.Date
+			# return QtCore.QDateTime.fromString(self.Date, "ddmmyyyy")
+		elif iCol == COL_PAYMENTSUM: 
+			return self.Type
+		else: raise IndexError("Index used in __getitem__ is not supported")
+
+
+# ***********************************************************************
+# ***********************************************************************
+# ***********************************************************************
+
 class DentalDatabase:
 	def __init__(self, listDentalClients = []):
 		self.ClientsMap = dict()
@@ -208,25 +269,30 @@ class DentalDatabase:
 	def __len__(self):
 		return len(self.ClientsMap)
 
-	def AppendActByDetailsToDoctorByID(self, iDoctorID,  sDate, sPatientName, sType, iQty, fUnitPrice):
-		doctor = self.GetDoctorFromID(iDoctorID)
-		if doctor is not None:
-			doctor.AppendActByDetails(sDate, sPatientName, sType, iQty, fUnitPrice)
-		return 0
-
 	def AppendActByInstanceToDoctorByID(self, iDoctorID, dentalActInstance):
 		doctor = self.GetDoctorFromID(iDoctorID)
 		if doctor is not None:
 			doctor.AppendActByDetails(dentalActInstance.Date, 
 									  dentalActInstance.PatientName, 
 									  dentalActInstance.Type, 
-									  dentalActInstance.Qty, 
-									  dentalActInstance.UnitPrice)
+									  dentalActInstance.Qty)
 		return 0
 	
-	def RemoveActByIndexByDoctorID(self, iDoctorID, iActIndex):
+	def AppendPaymentByInstanceToDoctorByID(self, iDoctorID, dentalPaymentInstance):
 		doctor = self.GetDoctorFromID(iDoctorID)
-		doctor.RemoveActByIndex(iActIndex)
+		if doctor is not None:
+			doctor.AppendPaymentByDetails(	dentalPaymentInstance.Date, 
+									  		dentalPaymentInstance.Sum)
+		return 0
+	
+	def RemovePaymentByIndexByDoctorID(self, iDoctorID, iIndex):
+		doctor = self.GetDoctorFromID(iDoctorID)
+		doctor.RemovePaymentByIndex(iIndex)
+		return 0
+	
+	def RemoveActByIndexByDoctorID(self, iDoctorID, iIndex):
+		doctor = self.GetDoctorFromID(iDoctorID)
+		doctor.RemoveActByIndex(iIndex)
 		return 0
 	
 	def RemoveDoctorByID(self, iDoctorID):
@@ -281,6 +347,14 @@ class DentalDatabase:
 		else: 
 			return doctor.acts
 
+	def GetListPaymentsByDoctorID(self, iDoctorID):
+		""" returns a list of DentalPayment instances """
+		doctor = self.GetDoctorFromID(iDoctorID)
+		if doctor is None:
+			return []
+		else: 
+			return doctor.payments
+
 	def GetListActsByDoctorIdByDate(self, iDoctorID, sMonth, sYear):
 		""" returns a list of DentalAct instances for a given date (month and year) """
 		lacts = self.GetListActsByDoctorID(iDoctorID)
@@ -291,9 +365,29 @@ class DentalDatabase:
 			newlacts.append(jAct)
 		return  newlacts
 
+	def GetListPaymentsByDoctorIdByDate(self, iDoctorID, sMonth, sYear):
+		""" returns a list of DentalPayment instances for a given date (month and year) """
+		lpayments = self.GetListPaymentsByDoctorID(iDoctorID)
+		newlpayments = list()
+		for jPayment in lpayments:
+			if jPayment.GetMonth() != sMonth: continue
+			if jPayment.GetYear() != sYear: continue
+			newlpayments.append(jPayment)
+		return  newlpayments
+
 	def GetNbActsByDoctorID(self, iDoctorID):
 		return len(self.GetListActsByDoctorID(iDoctorID))
 
+	def GetNbPaymentsByDoctorID(self, iDoctorID):
+		return len(self.GetListPaymentsByDoctorID(iDoctorID))
+
+
+	def SetDefaultActsByDoctorID(self, iDoctorID, dictOfDefaultPrices):
+		""" returns a list of DentalAct instances """
+		doctor = self.GetDoctorFromID(iDoctorID)
+		if doctor is None: return 0
+		else: 
+			doctor.AssignPersonalDefaultPrices(dictOfDefaultPrices)
 
 instance_of_dental_database = DentalDatabase()
 TYPE_DENTAL_DATABASE = type(instance_of_dental_database)
@@ -317,25 +411,71 @@ if __name__ == '__main__':
 		pkl_save(defaultprices, DB_DEFAULTPRICES)
 		return 0
 
-	def test2():
+	# def test2():
+	# 	DB_CLIENTS_AND_ACTS = "res/Database2017.dat"
+		
+	# 	MyDatabase = DentalDatabase()
+		
+	# 	id1 = MyDatabase.AddDoctorByDetails("Samir", "Kassir", "03789366")
+	# 	id2 = MyDatabase.AddDoctorByDetails("Khalil", "Gebran", "71555444")
+	# 	id3 = MyDatabase.AddDoctorByDetails("Alaa", "Zalzali", "70885146")
+		 
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id1, "05/02/2015", "Sahar K.", "CERAMIC", 2, 10)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "Ali M.","FULL-DENTURE", 10, 6.5)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/01/2017", "Sahar K.","CCM", 10, 6.5)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id1, "30/01/2017", "Sahar K.","FULL-DENTURE", 10, 6.5)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id2, "01/01/2016", "Rabih A.", "CERAMIC", 1, 12)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "08/12/2016", "Lilia K.", "FULL-DENTURE", 4, 37)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "20/01/2017", "Tanjara S.", "CERAMIC", 1, 50)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Esaaf R.", "CCM", 6, 10)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Elham U.", "FM", 6, 10)
+	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "28/01/2017", "Samar K.", "FULL-DENTURE", 6, 10)
+
+	# 	pkl_save(MyDatabase  , DB_CLIENTS_AND_ACTS)
+
+	# 	ParsedDatabase =  pickle.load( open( DB_CLIENTS_AND_ACTS , "rb" ) )
+	# 	print "len(ParsedDatabase)", len(ParsedDatabase)
+	# 	print "Nb parsed doctors", ParsedDatabase.GetNbDoctors()
+
+	# 	list_doctors = ParsedDatabase.GetListDoctors()
+	# 	for doctor in list_doctors:
+	# 		print "Dr.", doctor.GetFullName()
+
+	def test2bis():
 		DB_CLIENTS_AND_ACTS = "res/Database2017.dat"
 		
+		defaultprices = dict()
+		defaultprices["CERAMIC"]= 13.5
+		defaultprices["CCM"]= 13.5
+		defaultprices["FM"]= 11.6
+		defaultprices["FULL-DENTURE"]= 120
+
 		MyDatabase = DentalDatabase()
 		
 		id1 = MyDatabase.AddDoctorByDetails("Samir", "Kassir", "03789366")
 		id2 = MyDatabase.AddDoctorByDetails("Khalil", "Gebran", "71555444")
 		id3 = MyDatabase.AddDoctorByDetails("Alaa", "Zalzali", "70885146")
+
+		MyDatabase.SetDefaultActsByDoctorID(id1, defaultprices)
+		MyDatabase.SetDefaultActsByDoctorID(id2, defaultprices)
+		MyDatabase.SetDefaultActsByDoctorID(id3, defaultprices)
 		 
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "05/02/2015", "Sahar K.", "CERAMIC", 2, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "Ali M.","FULL-DENTURE", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/01/2017", "Sahar K.","CCM", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id1, "30/01/2017", "Sahar K.","FULL-DENTURE", 10, 6.5)
-		MyDatabase.AppendActByDetailsToDoctorByID(id2, "01/01/2016", "Rabih A.", "CERAMIC", 1, 12)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "08/12/2016", "Lilia K.", "FULL-DENTURE", 4, 37)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "20/01/2017", "Tanjara S.", "CERAMIC", 1, 50)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Esaaf R.", "CCM", 6, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Elham U.", "FM", 6, 10)
-		MyDatabase.AppendActByDetailsToDoctorByID(id3, "28/01/2017", "Samar K.", "FULL-DENTURE", 6, 10)
+		MyDatabase.AppendActByInstanceToDoctorByID(id1, DentalAct("05/02/2015", "Sahar K.", "CERAMIC", 2))
+		MyDatabase.AppendActByInstanceToDoctorByID(id1, DentalAct("25/03/2015", "Ali M.","FULL-DENTURE", 10))
+		MyDatabase.AppendActByInstanceToDoctorByID(id1, DentalAct("25/01/2017", "Sahar K.","CCM", 10))
+		MyDatabase.AppendActByInstanceToDoctorByID(id1, DentalAct("30/01/2017", "Sahar K.","FULL-DENTURE", 10))
+		MyDatabase.AppendActByInstanceToDoctorByID(id2, DentalAct("01/01/2016", "Rabih A.", "CERAMIC", 1))
+		MyDatabase.AppendActByInstanceToDoctorByID(id3, DentalAct("08/12/2016", "Lilia K.", "FULL-DENTURE", 4))
+		MyDatabase.AppendActByInstanceToDoctorByID(id3, DentalAct("20/01/2017", "Tanjara S.", "CERAMIC", 1))
+		MyDatabase.AppendActByInstanceToDoctorByID(id3, DentalAct("22/12/2016", "Esaaf R.", "CCM", 6))
+		MyDatabase.AppendActByInstanceToDoctorByID(id3, DentalAct("22/12/2016", "Elham U.", "FM", 6))
+		MyDatabase.AppendActByInstanceToDoctorByID(id3, DentalAct("28/01/2017", "Samar K.", "FULL-DENTURE", 6))
+
+		MyDatabase.AppendPaymentByInstanceToDoctorByID(id1, DentalPayment("05/02/2015", 150.0))
+		MyDatabase.AppendPaymentByInstanceToDoctorByID(id1, DentalPayment("06/02/2016", 250.0))
+		MyDatabase.AppendPaymentByInstanceToDoctorByID(id1, DentalPayment("06/07/2017", 450.0))
+		MyDatabase.AppendPaymentByInstanceToDoctorByID(id2, DentalPayment("23/01/2017", 220.0))
+		MyDatabase.AppendPaymentByInstanceToDoctorByID(id3, DentalPayment("16/01/2017", 113.0))
 		 
 		pkl_save(MyDatabase  , DB_CLIENTS_AND_ACTS)
 
@@ -348,6 +488,7 @@ if __name__ == '__main__':
 			print "Dr.", doctor.GetFullName()
 
 	test()
-	test2()
+	# test2()
+	test2bis()
 
 	

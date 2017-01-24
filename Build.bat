@@ -1,5 +1,6 @@
 @echo off
-
+set INNO_DIR=C:\Program Files (x86)\Inno Setup 5
+set PATH=%INNO_DIR%;%PATH%
 ::**************************************************************************
 
 SET /P FIRST=BUILD BINARY DISTRIBUTION WITH DLLs (Py2EXE)  (Y/[N])?

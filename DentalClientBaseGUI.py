@@ -1,5 +1,5 @@
-# VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       7       .           0         .         0      '
+﻿# VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
+__version__ =  '      0       .       9       .           0         .         0      '
 
 """
 # Client Databse app for managing contacts and dental acts
@@ -326,7 +326,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_RemoveDoctor.clicked.connect(self.OnRemoveDoctor)
         self.ui.PB_AddAct.clicked.connect(self.OnAddAct)
         self.ui.PB_RemoveAct.clicked.connect(self.OnRemoveAct)
-        # self.ui.m_tableclients.doubleClicked.connect(self.OnActivateClient)
+        self.ui.PB_AddPayment.clicked.connect(self.OnAddPayment)
+        self.ui.PB_RemovePayment.clicked.connect(self.OnRemovePayment)
         self.ui.m_tableclients.clicked.connect(self.OnActivateClient)
 
         date = time.strftime("%d/%m/%Y")
@@ -344,11 +345,13 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
                 list_doctors = self.ParsedDentalDatabase.GetListDoctors()
 
-        self.TableModelDoctors = DoctorTableModelNew(self)
-        # self.TableModelDoctors = DoctorTableModel(self)
-        self.TableModelActs = ActTableModelNew(self)
+        # DECLARE MODELS *********************************
+        self.TableModelDoctors = DoctorTableModel(self)
+        self.TableModelActs = ActTableModel(self)
+        self.TableModelPayments = PaymentTableModel(self)
+        # ************************************************
 
-        # TABLE VIEW : DOCTORS
+        # TABLE VIEW : DOCTORS ***************************
         table_view = self.ui.m_tableclients
         # table_view.setWordWrap(True)
         table_view.setModel(self.TableModelDoctors)
@@ -368,7 +371,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # enable sorting
         table_view.setSortingEnabled(True)
         
-        # TABLE VIEW : ACTS
+        # TABLE VIEW : ACTS *********************************
         table_view = self.ui.m_tableacts
         table_view.setWordWrap(True)
         table_view.setModel(self.TableModelActs)
@@ -392,6 +395,32 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # Set delegates
         qDelegateAct = DentalActDelegate(table_view, self.DefaultActsDict.keys())
         table_view.setItemDelegate(qDelegateAct)
+ 
+        # TABLE VIEW : PAYMENTS *********************************
+        table_view = self.ui.m_tablepayments
+        table_view.setWordWrap(True)
+        table_view.setModel(self.TableModelActs)
+        table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked ) # AllEditTriggers # NoEditTriggers 
+        table_view.setDragDropOverwriteMode(False)
+        table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
+        # table_view.setTextElideMode(QtCore.Qt.ElideNone)
+        table_view.setShowGrid(False)
+        sFont = APP_SETTINGS_TABLE_PAYMENTS_FONT
+        iFontSize = APP_SETTINGS_TABLE_PAYMENTS_FONTSIZE
+        font = QtGui.QFont(sFont, iFontSize) #, QtGui.QFont.Bold
+        table_view.setFont(font)
+        # set column width to fit contents (set font first!)
+        hh = table_view.horizontalHeader()
+        hh.setStretchLastSection(True)
+        table_view.resizeColumnsToContents()
+        table_view.resizeRowsToContents()
+        # enable sorting
+        table_view.setSortingEnabled(True)        
+        # Set delegates
+        # qDelegateAct = DentalPaymentDelegate(table_view, self.DefaultActsDict.keys())
+        # table_view.setItemDelegate(qDelegateAct)
+
 
         self.ActiveClientID = None
         self.LastKnownActType = ""
@@ -425,7 +454,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         if(not bExitWithoutSave):
             sDatabasePath = self.appsettings.GetPath_DoctorActsDatabase()
             pkl_save(self.ParsedDentalDatabase, sDatabasePath)
-        self.close()
+        reply = toolkit_ShowWarningMessage2("Are you sure you want to\nquit Dental Client Base ?")
+        if reply == QMessageBox.Ok: 
+        	self.close()
         return 0
 
     def OnOpenSettings(self):
@@ -473,6 +504,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         sCurrentYear = sCurrentDate.split("/")[2]
         iInvoiceID = self.appsettings.GetLastInvoiceNo() + 1
         dentalDoctor = self.ParsedDentalDatabase.GetDoctorFromID(doctorID)
+        listDentalPayments = self.ParsedDentalDatabase.GetListPaymentsByDoctorIdByDate(doctorID, sCurrentMonth, sCurrentYear)
         listDentalActs = self.ParsedDentalDatabase.GetListActsByDoctorIdByDate(doctorID, sCurrentMonth, sCurrentYear)
         if len(listDentalActs) == 0 : 
             sMsg = "No dental acts found for the current month while exporting invoice."
@@ -481,7 +513,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             return 0
         
         # attempt to export an invoice
-        sExportedInvoice = ExportInvoice(iInvoiceID, sCurrentMonth, sCurrentYear, dentalDoctor, listDentalActs)
+        if not QtCore.QDir(APP_INVOICE_EXPORT_DIR).exists():
+        	QtCore.QDir().mkdir(APP_INVOICE_EXPORT_DIR)
+        sExportedInvoice = ExportInvoice(iInvoiceID, sCurrentMonth, sCurrentYear, dentalDoctor, listDentalActs, listDentalPayments)
         
         if sExportedInvoice is None:
             toolkit_ReportUndefinedBehavior()
@@ -493,15 +527,22 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             webbrowser.open_new_tab(sExportedInvoice)
         return 0
 
+    def isDoctorSelected(self):
+        return (self.ActiveClientID is not None)
+
     # **********  TABLE ACTS EVENTS ***********************
 
     def OnAddAct(self):
+        if not self.isDoctorSelected():
+            toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
         sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
         newDentalAct = DentalAct(sCurrentDate, "", self.LastKnownActType) # remaining kept default
         self.TableModelActs.addDentalAct(self.ActiveClientID, newDentalAct)
         return 0
         
     def OnRemoveAct(self):
+        if not self.isDoctorSelected():
+            toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
         table_view = self.ui.m_tableacts
         selectModel = table_view.selectionModel()
         selectedIndexes = selectModel.selectedIndexes()
@@ -509,6 +550,29 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         if not qIndex.isValid(): return 0
         iRowToDel = selectedIndexes[0].row()
         self.TableModelActs.removeDentalAct(self.ActiveClientID, iRowToDel)
+        return 0 
+
+    # **********  TABLE PAYMENTS EVENTS ***********************
+
+    def OnAddPayment(self):
+        if not self.isDoctorSelected():
+            toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
+        sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
+        newDentalPayment = DentalPayment(sCurrentDate)
+        self.TableModelPayments.addDentalPayment(self.ActiveClientID, newDentalPayment)
+        return 0
+        
+    def OnRemovePayment(self):
+        if not self.isDoctorSelected():
+            toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
+        table_view = self.ui.m_tablepayments
+        selectModel = table_view.selectionModel()
+        selectedIndexes = selectModel.selectedIndexes()
+        qIndex = selectedIndexes[0]
+        if not qIndex.isValid(): return 0
+        iRowToDel = selectedIndexes[0].row()
+        self.TableModelActs.removeDentalPayment(self.ActiveClientID, iRowToDel)
+        # toolkit_ShowWarningMessage("ROU2 YA KHARA BA3ED MA 5ALASTA HAY :) :)")
         return 0 
 
     # **********  TABLE CLIENTS EVENTS ***********************

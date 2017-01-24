@@ -1,4 +1,7 @@
 @echo off
+set INKSCAPE_DIR=C:\Program Files\Inkscape
+::set IMAGEMAGICK_DIR=C:\Program Files\Inkscape
+set PATH=%INKSCAPE_DIR%;%PATH%
 
 :: inkscape
 :: without GUI
@@ -7,7 +10,7 @@
 :: ImageMagick
 
 :: Conversion with inkscape preserves font
-inkscape.exe -z --file=%1 --export-png=%~n1.png  -h=32 -w=32 --export-area-page
+inkscape.exe -z --file=%1 --export-png=%~n1.png  -h=64 -w=64 --export-area-page
 
 :: Convert white pixels to transparent
 imconvert.exe %~n1.png -transparent white  %~n1_tr.png

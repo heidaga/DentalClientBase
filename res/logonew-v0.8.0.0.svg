@@ -15,7 +15,7 @@
    id="svg3881"
    version="1.1"
    inkscape:version="0.48.1 "
-   sodipodi:docname="C:\Users\RASPI\Desktop\Misc_coding\clientdatabase-tableview\res\logonew.svg">
+   sodipodi:docname="New document 4">
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -24,10 +24,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.49497475"
-     inkscape:cx="22.938188"
+     inkscape:cx="338.10578"
      inkscape:cy="432.86033"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g4442"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -40,17 +40,6 @@
      inkscape:window-maximized="1" />
   <defs
      id="defs3883">
-    <linearGradient
-       id="linearGradient3758">
-      <stop
-         style="stop-color:#4b39ff;stop-opacity:1;"
-         offset="0"
-         id="stop3760" />
-      <stop
-         style="stop-color:#000b60;stop-opacity:0;"
-         offset="1"
-         id="stop3762" />
-    </linearGradient>
     <linearGradient
        gradientUnits="userSpaceOnUse"
        y2="11447.226"
@@ -71,17 +60,6 @@
          offset="1"
          style="stop-color:#b700e4;stop-opacity:0;" />
     </linearGradient>
-    <radialGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient3758"
-       id="radialGradient3764"
-       cx="1293.2939"
-       cy="596.45795"
-       fx="1293.2939"
-       fy="596.45795"
-       r="328.79623"
-       gradientTransform="matrix(-0.60988264,-0.63966752,1.2188479,-1.1620947,1355.06,2116.8767)"
-       gradientUnits="userSpaceOnUse" />
   </defs>
   <metadata
      id="metadata3886">
@@ -118,7 +96,7 @@
     <path
        inkscape:connector-curvature="0"
        id="path86"
-       style="fill:url(#radialGradient3764);fill-opacity:1.0;fill-rule:nonzero;stroke:none"
+       style="fill:#000b60;fill-opacity:0.12698413;fill-rule:nonzero;stroke:none"
        d="m 1293.294,267.66168 c -181.2988,0 -328.79629,147.4975 -328.79629,328.79625 0,181.29875 147.49749,328.79625 328.79629,328.79625 181.2987,0 328.7962,-147.4975 328.7962,-328.79625 0,-181.29875 -147.4975,-328.79625 -328.7962,-328.79625 l 0,0 z m 0,24.80875 c 167.8875,0 303.9875,136.1 303.9875,303.9875 0,167.8875 -136.1,303.9875 -303.9875,303.9875 -167.8875,0 -303.98754,-136.1 -303.98754,-303.9875 0,-167.8875 136.10004,-303.9875 303.98754,-303.9875" />
   </g>
 </svg>
