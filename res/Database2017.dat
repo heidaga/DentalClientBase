@@ -1,4 +1,4 @@
-(i__main__
+(iDentalClientBaseStructs
 DentalDatabase
 p1
 (dp2
@@ -7,7 +7,7 @@ p3
 (dp4
 S'9e6a5c91baa01c2ef225517fa715a9de79cc619e'
 p5
-(i__main__
+(iDentalClientBaseStructs
 DentalClient
 p6
 (dp7
@@ -22,7 +22,7 @@ p11
 sS'acts'
 p12
 (lp13
-(i__main__
+(iDentalClientBaseStructs
 DentalAct
 p14
 (dp15
@@ -53,7 +53,7 @@ p25
 sS'SubTotal'
 p26
 I480
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalAct
 p27
 (dp28
@@ -76,7 +76,7 @@ S'Tanjara S.'
 p31
 sg26
 F13.5
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalAct
 p32
 (dp33
@@ -99,7 +99,7 @@ S'Esaaf R.'
 p36
 sg26
 F81
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalAct
 p37
 (dp38
@@ -121,7 +121,7 @@ S'Elham U.'
 p40
 sg26
 F69.599999999999994
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalAct
 p41
 (dp42
@@ -150,16 +150,16 @@ p46
 sS'payments'
 p47
 (lp48
-(i__main__
+(iDentalClientBaseStructs
 DentalPayment
 p49
 (dp50
 g21
-S'16/01/2017'
+V27/01/2017
 p51
 sS'Sum'
 p52
-F113
+F0
 sbasS'Address'
 p53
 S''
@@ -179,7 +179,7 @@ p56
 S''
 sbsS'7649e8f867d0d63842d5b994043ca6e807b55455'
 p57
-(i__main__
+(iDentalClientBaseStructs
 DentalClient
 p58
 (dp59
@@ -191,7 +191,7 @@ S'Gebran'
 p61
 sg12
 (lp62
-(i__main__
+(iDentalClientBaseStructs
 DentalAct
 p63
 (dp64
@@ -218,7 +218,7 @@ S'71555444'
 p67
 sg47
 (lp68
-(i__main__
+(iDentalClientBaseStructs
 DentalPayment
 p69
 (dp70
@@ -243,7 +243,7 @@ ssg56
 S''
 sbsS'afbd64a9d4d441dcb68599672d3fb3a49fbc7746'
 p73
-(i__main__
+(iDentalClientBaseStructs
 DentalClient
 p74
 (dp75
@@ -255,7 +255,7 @@ S'Kassir'
 p77
 sg12
 (lp78
-(i__main__
+(iDentalClientBaseStructs
 DentalAct
 p79
 (dp80
@@ -277,7 +277,7 @@ S'Sahar K.'
 p82
 sg26
 F27
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalAct
 p83
 (dp84
@@ -299,7 +299,7 @@ S'Ali M.'
 p86
 sg26
 I1200
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalAct
 p87
 (dp88
@@ -320,7 +320,7 @@ sg24
 g82
 sg26
 F135
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalAct
 p90
 (dp91
@@ -346,7 +346,7 @@ S'03789366'
 p93
 sg47
 (lp94
-(i__main__
+(iDentalClientBaseStructs
 DentalPayment
 p95
 (dp96
@@ -354,7 +354,7 @@ g21
 g81
 sg52
 F150
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalPayment
 p97
 (dp98
@@ -363,7 +363,7 @@ S'06/02/2016'
 p99
 sg52
 F250
-sba(i__main__
+sba(iDentalClientBaseStructs
 DentalPayment
 p100
 (dp101

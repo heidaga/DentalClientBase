@@ -34,9 +34,9 @@ import re
 ## libiomp5md.dll 
 ## libmmd.dll 
 
-from DentalClientBaseSettings import APP_LOGO_ICO_PATH, APP_MAIN_SCRIPT
+import DentalClientBaseSettings as DCBS
+APP_SETTINGS_SCRIPT = str(DCBS.__file__).replace(".pyc", ".py")
 verbose = False
-
 
 sys.argv.append('py2exe')
 
@@ -80,14 +80,14 @@ def main():
 
     code = setup(
                 windows=[{
-		                    'script': APP_MAIN_SCRIPT,
-		                    'icon_resources':[(1, APP_LOGO_ICO_PATH)],
+		                    'script': DCBS.APP_MAIN_SCRIPT,
+		                    'icon_resources':[(1, DCBS.APP_LOGO_ICO_PATH)],
 		                    # 'bitmap_resources ':bitmap_resources,
 		                    # other_resources = [get_manifest_resource("Your app name")],
 		                    "dest_base" : "DentalClientBase",   #exe name
 		                    "copyright" : "Copyright (c) 2017 Ali Saad",
 		                    "company_name" : "Ali Saad Developments",
-		                    "version" : "".join(grep('__version__',APP_MAIN_SCRIPT).split()),
+		                    "version" : "".join(grep('__version__',APP_SETTINGS_SCRIPT).split()),
 		                    "Name" : "Dental Client Base", # name in properties
                 }],
                 zipfile=None,

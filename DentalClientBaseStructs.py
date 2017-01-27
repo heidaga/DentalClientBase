@@ -179,7 +179,7 @@ class DentalClient:
 		return HashClientID(self.Firstname,self.Lastname,self.Phone)
 
 	def GetFullName(self):
-		return self.Firstname + " " + self.Lastname
+		return "Dr. {0} {1}".format(self.Firstname, self.Lastname)
 
 	def SetVarFirstname(self, sVal):
 		self.Firstname = str(sVal)
@@ -239,7 +239,7 @@ class DentalPayment:
 		return 0
 
 	def SetVarSum(self, fSum):
-		self.Sum = fSum
+		self.Sum = float(fSum)
 		return 0
 
 	""" ONLY FOR SORTING : acts as a getter 
@@ -251,7 +251,7 @@ class DentalPayment:
 			return self.Date
 			# return QtCore.QDateTime.fromString(self.Date, "ddmmyyyy")
 		elif iCol == COL_PAYMENTSUM: 
-			return self.Type
+			return self.Sum
 		else: raise IndexError("Index used in __getitem__ is not supported")
 
 
@@ -485,7 +485,7 @@ if __name__ == '__main__':
 
 		list_doctors = ParsedDatabase.GetListDoctors()
 		for doctor in list_doctors:
-			print "Dr.", doctor.GetFullName()
+			print "Doctor name", doctor.GetFullName()
 
 	test()
 	# test2()

@@ -1,7 +1,4 @@
-﻿# VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       9       .           0         .         2      '
-
-"""
+﻿"""
 # Client Databse app for managing contacts and dental acts
 """
 # *** general
@@ -12,7 +9,7 @@ import time
 import cPickle as pickle
 
 # *** qt specific
-from PySide import QtGui, QtCore
+from PySide import QtGui, QtCore, QtWebKit
 from PySide.QtGui import QColor
 from PySide.QtGui import QMessageBox
 # from matplotlib import rc
@@ -295,6 +292,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
     	self.ui.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(APP_LOGO_PNG_PATH))
         self.setWindowTitle(APP_NAME+" "+APP_LICENSE)
+        self.setWindowState(QtCore.Qt.WindowMaximized)
         self.ui.banner.setIcon(QtGui.QIcon(APP_BANNER_PATH))
         
         # Background Color hotfix for central UI widget 
@@ -311,7 +309,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
         # Increase the priority for the UI thread to ensure responsiveness
         QtCore.QThread.currentThread().Priority(QtCore.QThread.HighPriority)
-       
+        
         # Enable/Disable options
         self.ui.PB_AddDoctor.setEnabled(1)
         self.ui.PB_RemoveDoctor.setEnabled(1)
@@ -328,6 +326,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_RemoveAct.clicked.connect(self.OnRemoveAct)
         self.ui.PB_AddPayment.clicked.connect(self.OnAddPayment)
         self.ui.PB_RemovePayment.clicked.connect(self.OnRemovePayment)
+        self.ui.PB_ToggleInvoiceViewer.clicked.connect(self.OnShowHideInvoiceViewer)
         self.ui.m_tableclients.clicked.connect(self.OnActivateClient)
 
         date = time.strftime("%d/%m/%Y")
@@ -366,8 +365,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # set column width to fit contents (set font first!)
         hh = table_view.horizontalHeader()
         hh.setStretchLastSection(True)
+        vv = table_view.verticalHeader()
+        vv.setVisible(True)
+        vv.setStretchLastSection(False)
         table_view.resizeColumnsToContents()
-        table_view.resizeRowsToContents()
+        # table_view.resizeRowsToContents()
         # enable sorting
         table_view.setSortingEnabled(True)
         
@@ -377,7 +379,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.setModel(self.TableModelActs)
         table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked ) # AllEditTriggers # NoEditTriggers 
         table_view.setDragDropOverwriteMode(False)
-        table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        # table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
         # table_view.setTextElideMode(QtCore.Qt.ElideNone)
         table_view.setShowGrid(False)
@@ -388,8 +390,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # set column width to fit contents (set font first!)
         hh = table_view.horizontalHeader()
         hh.setStretchLastSection(True)
+        vv = table_view.verticalHeader()
+        vv.setVisible(True)
+        vv.setStretchLastSection(False)
         table_view.resizeColumnsToContents()
-        table_view.resizeRowsToContents()
+        # table_view.resizeRowsToContents()
         # enable sorting
         table_view.setSortingEnabled(True)        
         # Set delegates
@@ -399,11 +404,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # TABLE VIEW : PAYMENTS *********************************
         table_view = self.ui.m_tablepayments
         table_view.setWordWrap(True)
-        table_view.setModel(self.TableModelActs)
+        table_view.setModel(self.TableModelPayments)
         table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked ) # AllEditTriggers # NoEditTriggers 
         table_view.setDragDropOverwriteMode(False)
-        table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
-        table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
+        # table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         # table_view.setTextElideMode(QtCore.Qt.ElideNone)
         table_view.setShowGrid(False)
         sFont = APP_SETTINGS_TABLE_PAYMENTS_FONT
@@ -413,8 +418,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # set column width to fit contents (set font first!)
         hh = table_view.horizontalHeader()
         hh.setStretchLastSection(True)
+        vv = table_view.verticalHeader()
+        vv.setVisible(True)
+        vv.setStretchLastSection(False)
         table_view.resizeColumnsToContents()
-        table_view.resizeRowsToContents()
+        # table_view.resizeRowsToContents()
         # enable sorting
         table_view.setSortingEnabled(True)        
         # Set delegates
@@ -422,9 +430,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # table_view.setItemDelegate(qDelegateAct)
 
 
+        self.ui.GB_InvoiceViewer.setVisible(False)
+        self.ui.TabInvoiceViewer.setCurrentIndex(0)
+        # self.ui.webViewMesseger.load(QtCore.QUrl('https://web.whatsapp.com/'))
+        
         self.ActiveClientID = None
         self.LastKnownActType = ""
-
         self.InitStyle()
         
     # ********************************************************************************
@@ -450,10 +461,13 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
     def OnClose(self):
         bUTD1 = self.TableModelDoctors.IsUpToDate() 
         bUTD2 = self.TableModelActs.IsUpToDate()
-        bExitWithoutSave = bUTD1 and bUTD2
+        bUTD3 = self.TableModelPayments.IsUpToDate()
+        bExitWithoutSave = bUTD1 and bUTD2 and bUTD3
         if(not bExitWithoutSave):
             sDatabasePath = self.appsettings.GetPath_DoctorActsDatabase()
             pkl_save(self.ParsedDentalDatabase, sDatabasePath)
+        if not BOOLSETTING_Confirm_before_exit_application:
+            return 0
         reply = toolkit_ShowWarningMessage2("Are you sure you want to\nquit Dental Client Base ?")
         if reply == QMessageBox.Ok: 
         	self.close()
@@ -465,8 +479,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.appsettings.activateWindow()
         return 0
 
+    def OnShowHideInvoiceViewer(self):
+        bSwitch = self.ui.GB_InvoiceViewer.isVisible() 
+        self.ui.GB_InvoiceViewer.setVisible(not bSwitch)
+        return 0
+
     def OnSpawnCalculator(self):
-        # os.system('calc.exe')
         subprocess.call("calc.exe")
         return 0
 
@@ -475,7 +493,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # subprocess.Popen(r'explorer /select,"D:\LOCAL_DEV\_temp\DentalClientBase\invoice_exports\."')
         # subprocess.Popen(r'explorer /select' + APP_INVOICE_EXPORT_DIR)
         filename = ""
-        filters = ["Dental Database Invoice (*.html)", "Any files (*)"]
+        filters = ["HTML Invoice (*.html)", "PDF Invoice (*.pdf)", "Dental Database Invoice (*.html *.pdf)", "Any files (*)"]
         dialog = QtGui.QFileDialog(self, "Open Exported Invoice", directory = APP_INVOICE_EXPORT_DIR)
         dialog.setNameFilters(filters)
         dialog.setViewMode(QtGui.QFileDialog.Detail)
@@ -507,24 +525,57 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         listDentalPayments = self.ParsedDentalDatabase.GetListPaymentsByDoctorIdByDate(doctorID, sCurrentMonth, sCurrentYear)
         listDentalActs = self.ParsedDentalDatabase.GetListActsByDoctorIdByDate(doctorID, sCurrentMonth, sCurrentYear)
         if len(listDentalActs) == 0 : 
-            sMsg = "No dental acts found for the current month while exporting invoice."
-            sMsg += " No invoice exported."
+            sMsg = "No dental acts found for the current month while exporting invoice. No invoice exported."
             toolkit_ShowWarningMessage(sMsg)
             return 0
         
         # attempt to export an invoice
         if not QtCore.QDir(APP_INVOICE_EXPORT_DIR).exists():
         	QtCore.QDir().mkdir(APP_INVOICE_EXPORT_DIR)
-        sExportedInvoice = ExportInvoice(iInvoiceID, sCurrentMonth, sCurrentYear, dentalDoctor, listDentalActs, listDentalPayments)
+
+        sExportedInvoice , sExportedInvoicePDF = ExportInvoice(iInvoiceID, sCurrentMonth, sCurrentYear, dentalDoctor, listDentalActs, listDentalPayments)
         
         if sExportedInvoice is None:
-            toolkit_ReportUndefinedBehavior()
+            toolkit_ReportUndefinedBehavior("OnExportInvoice: sExportedInvoice (#{0}) is None.".format(iInvoiceID))
             return 0
 
         # increment invoice counter after successful export 
         if sExportedInvoice != "" :
             self.appsettings.SetLastInvoiceNo(iInvoiceID)
-            webbrowser.open_new_tab(sExportedInvoice)
+
+            if BOOLSETTING_Preview_exported_invoice_in_internet_browser:
+                webbrowser.open_new_tab(sExportedInvoice)
+            
+            # Preview in Invoice viewer pre requisite for PDF ? 
+            if BOOLSETTING_Preview_exported_invoice_in_Invoice_Viewer:
+                self.ui.TabInvoiceViewer.setCurrentIndex(1)
+                self.ui.TabInvoiceViewer.setTabText(1, "Invoice {0}: {1}".format(iInvoiceID, dentalDoctor.GetFullName()))
+                
+                # Show in second tab 
+                # TODO: for each client open a new closable tab
+                # self.webViewInvoiceViewer = QtWebKit.QWebView() # spawns a separate window
+                self.ui.webViewInvoiceViewer.load(QtCore.QUrl.fromLocalFile(sExportedInvoice))
+                self.ui.webViewInvoiceViewer.show()
+
+            if BOOLSETTING_Convert_exported_invoice_to_pdf_without_preview:
+                # Print a PDF
+                qdoc = QtGui.QTextDocument(self)
+                sContentHtml = open( sExportedInvoice , 'r').read()                
+                qdoc.setHtml( sContentHtml.replace(" ", "") ) #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                printer = QtGui.QPrinter() #QtGui.QPrinter(QtGui.QPrinter.HighResolution)
+                printer.setOutputFileName(sExportedInvoicePDF)
+                printer.setOutputFormat(QtGui.QPrinter.PdfFormat) # QPrinter.NativeFormat
+                printer.setPageSize(QtGui.QPrinter.A4)
+                # printer.setOrientation(QtGui.QPrinter.Portrait)    # QtGui.QPrinter.Portrait    
+                # printer.setFullPage(True)
+                qdoc.print_(printer)
+                # printer.newPage()
+                # printer.setColorMode(QtGui.QPrinter.Color) # QtGui.QPrinter.GrayScale
+                # dlg = QtGui.QPrintDialog(printer, None)
+                # if dlg.exec_() != QtGui.QDialog.Accepted:
+                #     return
+                self.ui.webViewInvoiceViewer.print_(printer)
+
         return 0
 
     def isDoctorSelected(self):
@@ -546,9 +597,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view = self.ui.m_tableacts
         selectModel = table_view.selectionModel()
         selectedIndexes = selectModel.selectedIndexes()
+        if len(selectedIndexes) == 0: return 0
         qIndex = selectedIndexes[0]
         if not qIndex.isValid(): return 0
         iRowToDel = selectedIndexes[0].row()
+        reply = toolkit_ShowDeleteMessage("Are you sure you want to\ndelete the selected ACT ?")
+        if reply != QMessageBox.Ok: return 0
         self.TableModelActs.removeDentalAct(self.ActiveClientID, iRowToDel)
         return 0 
 
@@ -556,7 +610,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     def OnAddPayment(self):
         if not self.isDoctorSelected():
-            toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
+            d("Unable to complete operation: please select doctor first.")
         sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
         newDentalPayment = DentalPayment(sCurrentDate)
         self.TableModelPayments.addDentalPayment(self.ActiveClientID, newDentalPayment)
@@ -568,10 +622,13 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view = self.ui.m_tablepayments
         selectModel = table_view.selectionModel()
         selectedIndexes = selectModel.selectedIndexes()
+        if len(selectedIndexes) == 0: return 0
         qIndex = selectedIndexes[0]
         if not qIndex.isValid(): return 0
         iRowToDel = selectedIndexes[0].row()
-        self.TableModelActs.removeDentalPayment(self.ActiveClientID, iRowToDel)
+        reply = toolkit_ShowDeleteMessage("Are you sure you want to\ndelete the selected PAYMENT ?")
+        if reply != QMessageBox.Ok: return 0 
+        self.TableModelPayments.removeDentalPayment(self.ActiveClientID, iRowToDel)
         # toolkit_ShowWarningMessage("ROU2 YA KHARA BA3ED MA 5ALASTA HAY :) :)")
         return 0 
 
@@ -603,24 +660,39 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view = self.ui.m_tableacts
         table_model_doctors = self.TableModelDoctors
         table_model_acts = self.TableModelActs
+        table_model_payments = self.TableModelPayments
         iRow = qIndex.row()
         self.ActiveClientID = table_model_doctors.getHashIDFromSelectedDoctor(qIndex)
         table_model_acts.SetModelForDoctorByID(self.ActiveClientID)
-        table_view.setModel(table_model_acts)
-        table_view.resizeColumnsToContents()
-        table_view.resizeRowsToContents()
-        hh = table_view.horizontalHeader()
+        table_model_payments.SetModelForDoctorByID(self.ActiveClientID)
         
-        table_view.setColumnWidth(COL_ACTDATE,          ACT_TABLE_COLUMNSIZE_DATE)
-        table_view.setColumnWidth(COL_ACTTYPE,          ACT_TABLE_COLUMNSIZE_TYPE)
-        table_view.setColumnWidth(COL_ACTPATIENT,       ACT_TABLE_COLUMNSIZE_PATIENT)
-        table_view.setColumnWidth(COL_ACTNOTES,         ACT_TABLE_COLUMNSIZE_NOTES)
-        table_view.setColumnWidth(COL_ACTUNITPRICE,     ACT_TABLE_COLUMNSIZE_UNITPRICE)
-        table_view.setColumnWidth(COL_ACTQTY,           ACT_TABLE_COLUMNSIZE_QTY)
-        table_view.setColumnWidth(COL_ACTSUBTOTAL,      ACT_TABLE_COLUMNSIZE_TOTAL)
-        # hh.setStretchLastSection(True)
+        # NOT NECESSARY
+        # self.ui.m_tableacts.setModel(table_model_acts)
+        # self.ui.m_tablepayments.setModel(table_model_payments)
+
+        if BOOLSETTING_Initialize_Columnsize_On_Client_Activation:
+            self.InitializeHorizontalHeaderSize(self.ui.m_tableacts)
+            self.InitializeHorizontalHeaderSize(self.ui.m_tablepayments)
+        else:
+            self.ui.m_tableacts.resizeColumnsToContents()
+            self.ui.m_tablepayments.resizeColumnsToContents()
+
         return 0
 
+
+    def InitializeHorizontalHeaderSize(self, table_view):
+        if table_view is self.ui.m_tableacts:
+            table_view.setColumnWidth(COL_ACTDATE,          ACT_TABLE_COLUMNSIZE_DATE)
+            table_view.setColumnWidth(COL_ACTTYPE,          ACT_TABLE_COLUMNSIZE_TYPE)
+            table_view.setColumnWidth(COL_ACTPATIENT,       ACT_TABLE_COLUMNSIZE_PATIENT)
+            table_view.setColumnWidth(COL_ACTNOTES,         ACT_TABLE_COLUMNSIZE_NOTES)
+            table_view.setColumnWidth(COL_ACTUNITPRICE,     ACT_TABLE_COLUMNSIZE_UNITPRICE)
+            table_view.setColumnWidth(COL_ACTQTY,           ACT_TABLE_COLUMNSIZE_QTY)
+            table_view.setColumnWidth(COL_ACTSUBTOTAL,      ACT_TABLE_COLUMNSIZE_TOTAL)
+            
+        elif table_view is self.ui.m_tablepayments:
+            table_view.setColumnWidth(COL_PAYMENTDATE,      PAYMENT_TABLE_COLUMNSIZE_DATE)
+            table_view.setColumnWidth(COL_PAYMENTSUM,      PAYMENT_TABLE_COLUMNSIZE_SUM)
 
 #****************************************************************************************************
 #****************************************************************************************************

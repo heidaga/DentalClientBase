@@ -18,6 +18,7 @@ import operator
 import hashlib
 import sys
 import webbrowser
+from urllib import quote
 
 # Non open to user modification
 APP_SETTINGS_ACTDATE_FORMAT_DATABASE = "dd/MM/yyyy"
@@ -33,7 +34,7 @@ ACT_TABLE_ALIGNEMENT_DATE = QtCore.Qt.AlignCenter
 ACT_TABLE_ALIGNEMENT_TYPE = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
 ACT_TABLE_ALIGNEMENT_PATIENT = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
 ACT_TABLE_ALIGNEMENT_NOTES = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
-ACT_TABLE_ALIGNEMENT_FLOATS = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
+ACT_TABLE_ALIGNEMENT_FLOATS = QtCore.Qt.AlignCenter #and QtCore.Qt.AlignVCenter
 
 #Font: QFont(const QString & family, int pointSize = -1, int weight = -1, bool italic = false)
 sFont = APP_SETTINGS_TABLE_ACTS_FONT
@@ -143,16 +144,19 @@ def toolkit_ShowDeleteMessage(msg):
     msgBox.setIconPixmap(QtGui.QPixmap('res/garbage.png').scaled(res,res))
     return msgBox.exec_()
 
-def toolkit_ReportUndefinedBehavior():
+def toolkit_ReportUndefinedBehavior(sErrMsg = ""):
     sMsg = "Unedfined error."
     sMsg += " Please contact Ali Saad for more information."
-    toolkit_ShowWarningMessage(sMsg)
-    toolkit_ErrorReport()
+    toolkit_ShowWarningMessage(sErrMsg)
+    toolkit_ErrorReport(sErrMsg)
+    return
 
-def toolkit_ErrorReport():
+def toolkit_ErrorReport(sErrMsg = ""):
+    sNonEncodedUrl = str(APP_SETTINGS_REPORTING) + sErrMsg
+    sEncodedUrl = urllib.quote(sNonEncodedUrl)
     webbrowser.open_new_tab(APP_SETTINGS_REPORTING)
+    return
 
-    pass
 def toolkit_new_item(table_widget, iRow, iCol, sText):
     qItem = table_widget.item(iRow, iCol) 
     if(qItem is None):
@@ -160,6 +164,7 @@ def toolkit_new_item(table_widget, iRow, iCol, sText):
         table_widget.setItem(iRow, iCol, qItem)
     qItem.setText(sText)
     qItem.setFlags(QtCore.Qt.ItemIsEnabled)
+    return
 
 
 ##################################################################

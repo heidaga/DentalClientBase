@@ -2,6 +2,20 @@
 
 # Changelog
 
+* v0.10.1.1:
+- Added boolean switch to control PDF exprot
+- Bug fix link between database payment and invoice
+
+* v0.10.0.0:
+- Major interface changes
+- Added web viewer to visualize the html invoice inside app
+- Added movable tabs with web page
+- Fixed PDF export issues
+- Fixed connection problem between acts and payments tables
+- Added new boolean settings switches
+- Minor changes to setup file
+
+
 * v0.9.0.2:
 - bug fix in py2exe setup (wrong path to icon)
 

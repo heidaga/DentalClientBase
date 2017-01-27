@@ -12,4 +12,4 @@ pyside-rcc.exe  mainwindow.qrc -o mainwindow_rc.py
 ::pyrcc4.exe  mainwindow.qrc -o mainwindow_rc.py
 
 ::python DentalClientBaseGUI.py
-pause
+::pause

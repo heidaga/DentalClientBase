@@ -8,7 +8,7 @@ http://pbpython.com/pdf-reports.html
 from jinja2 import Environment, FileSystemLoader
 # from weasyprint import HTML
 import os
-import base64
+# import base64
 
 from DentalClientBaseStructs import *
 from DentalClientBaseToolkit import *
@@ -141,9 +141,10 @@ def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs, listD
     with open(HtmlOutPath, "w") as text_file:
         text_file.write("{0}".format(sHtmlContent))
 
-    # PdfOutPath = os.path.join(APP_INVOICE_EXPORT_DIR,sOutputFname+".pdf") 
-    # HTML(string=sHtmlContent).write_pdf(PdfOutPath, stylesheets=[sHtmlCSSPath])
-    return HtmlOutPath
+    PdfOutPath = os.path.join(APP_INVOICE_EXPORT_DIR,sOutputFname+".pdf") 
+    # HTML(string=sHtmlContent).write_pdf(PdfOutPath, stylesheets=[sHtmlCSSPath])  
+
+    return HtmlOutPath, PdfOutPath
 
 
 if __name__ == "__main__":
@@ -156,8 +157,9 @@ if __name__ == "__main__":
         list_of_acts = ParsedDatabase.GetListActsByDoctorID(last_doctor.id())
         list_of_payments = ParsedDatabase.GetListPaymentsByDoctorID(last_doctor.id())
 
-        sPathToInvoice = str()
-        sPathToInvoice = ExportInvoice(56, "02" , "2016", last_doctor, list_of_acts, list_of_payments)
+        sPathToInvoiceHTML = str()
+        sPathToInvoicePDF = str()
+        sPathToInvoiceHTML , sPathToInvoicePDF  = ExportInvoice(56, "02" , "2016", last_doctor, list_of_acts, list_of_payments)
 
     test()
 

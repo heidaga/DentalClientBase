@@ -3,6 +3,9 @@ import os
 #########################
 # GENERAL SETTINGS
 #########################
+# VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
+__version__ =  '      0       .       10       .           1         .         1      '
+
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
 APP_RESOURCES_FOLDER = "res"
@@ -40,7 +43,8 @@ QPushButton:default {
 APP_SETTINGS_FONT = "MS Shell Dlg 2" 
 APP_SETTINGS_FONTSIZE = 12
 
-APP_SETTINGS_REPORTING = r"mailto:alisaad05@gmail.com?subject=DCB_issue&body=Issue%20Description"
+# this string will be url-encoded so it shouldnt contain any pre encoded character
+APP_SETTINGS_REPORTING = r"mailto:alisaad05@gmail.com?subject=DentalClientBase_v{0}_issue&body=Issue Description:".format("".join(__version__).split())
 
 #########################
 # TABLE- DOCTORS
@@ -85,13 +89,13 @@ COL_ACTPAID         = 7
 APP_SETTINGS_ACTDATE_FORMAT_DISPLAY = "dd/MM/yyyy"		#  01/01/2000
 
 # Column size
-ACT_TABLE_COLUMNSIZE_DATE 		= 100
-ACT_TABLE_COLUMNSIZE_TYPE 		= 150
-ACT_TABLE_COLUMNSIZE_PATIENT 	= 100
-ACT_TABLE_COLUMNSIZE_NOTES 		= 200
-ACT_TABLE_COLUMNSIZE_UNITPRICE 	= 75
-ACT_TABLE_COLUMNSIZE_QTY 		= 75
-ACT_TABLE_COLUMNSIZE_TOTAL 		= 75
+ACT_TABLE_COLUMNSIZE_DATE 		= 200
+ACT_TABLE_COLUMNSIZE_TYPE 		= 200
+ACT_TABLE_COLUMNSIZE_PATIENT 	= 200
+ACT_TABLE_COLUMNSIZE_NOTES 		= 400
+ACT_TABLE_COLUMNSIZE_UNITPRICE 	= 100
+ACT_TABLE_COLUMNSIZE_QTY 		= 100
+ACT_TABLE_COLUMNSIZE_TOTAL 		= 100
 
 
 #########################
@@ -103,6 +107,9 @@ APP_SETTINGS_TABLE_PAYMENTS_FONTSIZE = 10
 # Column indices - enum style
 COL_PAYMENTDATE     = 0
 COL_PAYMENTSUM      = 1 
+
+PAYMENT_TABLE_COLUMNSIZE_DATE   = 100
+PAYMENT_TABLE_COLUMNSIZE_SUM    = 100
 
 
 #########################
@@ -123,6 +130,18 @@ APP_SETTINGS_SCALED_ICONS_RESOLUTION = 100 # pixel
 #########################
 INVOICE_FLOAT_FORMAT = '.2f'
 HEADERS_TO_EXCLUDE_FROM_INVOICE = [ COL_ACTNOTES ]
+
+
+
+#########################
+# BOOLEAN SWITCHES
+#########################
+
+BOOLSETTING_Initialize_Columnsize_On_Client_Activation = True
+BOOLSETTING_Confirm_before_exit_application = True
+BOOLSETTING_Preview_exported_invoice_in_Invoice_Viewer = True
+BOOLSETTING_Preview_exported_invoice_in_internet_browser = False
+BOOLSETTING_Convert_exported_invoice_to_pdf_without_preview = True
 
 
 
