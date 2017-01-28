@@ -83,6 +83,11 @@ class GeneralSettings(QtGui.QMainWindow):
         self.InitSettings()
 
     # ********************************************************************************
+    def WriteSettings(self):
+        with open(APP_SETTINGS, 'w') as fo:
+            fo.write("Database_DoctorsActs = {0}\n".format(self.DoctorsActsDatabasePath))
+            fo.write("Database_DefaultActs = {0}\n".format(self.DefaultActsDatabasePath))
+            fo.write("LastInvoiceNo = {0}\n".format(self.LastInvoiceNo))
 
     def InitSettings(self):
 
@@ -91,6 +96,7 @@ class GeneralSettings(QtGui.QMainWindow):
 
         bFoundSettings = False
         if os.path.isfile(APP_SETTINGS):
+            print "os.path.isfile(APP_SETTINGS) is true so read mode"
             bFoundSettings = True
             with open(APP_SETTINGS, 'r') as fo:
                 while True:
@@ -111,10 +117,7 @@ class GeneralSettings(QtGui.QMainWindow):
                         self.LastInvoiceNo = int(sSettingVal)
                         if self.LastInvoiceNo < 0: self.LastInvoiceNo = 0 
         else:
-            with open(APP_SETTINGS, 'w') as fo:
-                fo.write("Database_DoctorsActs = {0}\n".format(self.DoctorsActsDatabasePath))
-                fo.write("Database_DefaultActs = {0}\n".format(self.DefaultActsDatabasePath))
-                fo.write("LastInvoiceNo = {0}\n".format(self.LastInvoiceNo))
+            self.WriteSettings()
 
         # Load default acts
         bFoundDatabasePrices = False
@@ -468,6 +471,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         if(not bExitWithoutSave):
             sDatabasePath = self.appsettings.GetPath_DoctorActsDatabase()
             pkl_save(self.ParsedDentalDatabase, sDatabasePath)
+        self.appsettings.WriteSettings() # re-write settings.ini
+
         if not BOOLSETTING_Confirm_before_exit_application:
             return 0
         reply = toolkit_ShowWarningMessage2("Are you sure you want to\nquit Dental Client Base ?")

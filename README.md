@@ -1,4 +1,13 @@
+# DentalClientBase To-Do list
+
+* Add settings/switches to Settings window
+* Reset Invoice counter
+* Implement number validation rules in all tables
+
 # DentalClientBase Changelog
+
+* v0.10.1.3:
+- Bug fix: invoice number beginning from zero after reset
 
 * v0.10.1.2:
 - Completed feature of unique unit prices per doctor:
