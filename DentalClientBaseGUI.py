@@ -96,7 +96,7 @@ class GeneralSettings(QtGui.QMainWindow):
 
         bFoundSettings = False
         if os.path.isfile(APP_SETTINGS):
-            print "os.path.isfile(APP_SETTINGS) is true so read mode"
+            # print "os.path.isfile(APP_SETTINGS) is true so read mode"
             bFoundSettings = True
             with open(APP_SETTINGS, 'r') as fo:
                 while True:
@@ -198,7 +198,7 @@ class GeneralSettings(QtGui.QMainWindow):
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
-            self.close()
+            self.OnClose()
 
     # def focusOutEvent(self, event):
     #     self.setFocus(QtCore.Qt.StrongFocus)
@@ -594,7 +594,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         if not self.isDoctorSelected():
             toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
         sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
-        newDentalAct = DentalAct(sCurrentDate, "", self.LastKnownActType) # remaining kept default
+        newDentalAct = DentalAct(sCurrentDate, "", self.LastKnownActType, 1) # remaining kept default
         self.TableModelActs.addDentalAct(self.ActiveClientID, newDentalAct)
         return 0
         
@@ -693,18 +693,19 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
 
     def InitializeHorizontalHeaderSize(self, table_view):
+        iWIDTH = table_view.width()
         if table_view is self.ui.m_tableacts:
-            table_view.setColumnWidth(COL_ACTDATE,          ACT_TABLE_COLUMNSIZE_DATE)
-            table_view.setColumnWidth(COL_ACTTYPE,          ACT_TABLE_COLUMNSIZE_TYPE)
-            table_view.setColumnWidth(COL_ACTPATIENT,       ACT_TABLE_COLUMNSIZE_PATIENT)
-            table_view.setColumnWidth(COL_ACTNOTES,         ACT_TABLE_COLUMNSIZE_NOTES)
-            table_view.setColumnWidth(COL_ACTUNITPRICE,     ACT_TABLE_COLUMNSIZE_UNITPRICE)
-            table_view.setColumnWidth(COL_ACTQTY,           ACT_TABLE_COLUMNSIZE_QTY)
-            table_view.setColumnWidth(COL_ACTSUBTOTAL,      ACT_TABLE_COLUMNSIZE_TOTAL)
+            table_view.setColumnWidth(COL_ACTDATE,          iWIDTH*ACT_TABLE_COLUMNSIZE_DATE)
+            table_view.setColumnWidth(COL_ACTTYPE,          iWIDTH*ACT_TABLE_COLUMNSIZE_TYPE)
+            table_view.setColumnWidth(COL_ACTPATIENT,       iWIDTH*ACT_TABLE_COLUMNSIZE_PATIENT)
+            table_view.setColumnWidth(COL_ACTNOTES,         iWIDTH*ACT_TABLE_COLUMNSIZE_NOTES)
+            table_view.setColumnWidth(COL_ACTUNITPRICE,     iWIDTH*ACT_TABLE_COLUMNSIZE_UNITPRICE)
+            table_view.setColumnWidth(COL_ACTQTY,           iWIDTH*ACT_TABLE_COLUMNSIZE_QTY)
+            table_view.setColumnWidth(COL_ACTSUBTOTAL,      iWIDTH*ACT_TABLE_COLUMNSIZE_TOTAL)
             
         elif table_view is self.ui.m_tablepayments:
-            table_view.setColumnWidth(COL_PAYMENTDATE,      PAYMENT_TABLE_COLUMNSIZE_DATE)
-            table_view.setColumnWidth(COL_PAYMENTSUM,      PAYMENT_TABLE_COLUMNSIZE_SUM)
+            table_view.setColumnWidth(COL_PAYMENTDATE,      iWIDTH*PAYMENT_TABLE_COLUMNSIZE_DATE)
+            table_view.setColumnWidth(COL_PAYMENTSUM,       iWIDTH*PAYMENT_TABLE_COLUMNSIZE_SUM)
 
 #****************************************************************************************************
 #****************************************************************************************************

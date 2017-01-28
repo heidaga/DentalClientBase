@@ -497,6 +497,7 @@ class ActTableModel(QtCore.QAbstractTableModel):
         self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
         self.database.AppendActByInstanceToDoctorByID(iDoctorID, dentalActInstance)
         self.endInsertRows()
+        self.layoutChanged.emit()
         self.bUpToDate = False
 
     def removeDentalAct(self, iDoctorID, iRowIndex):
@@ -623,6 +624,7 @@ class PaymentTableModel(QtCore.QAbstractTableModel):
         self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
         self.database.AppendPaymentByInstanceToDoctorByID(iDoctorID, dentalPaymentInstance)
         self.endInsertRows()
+        self.layoutChanged.emit()
         self.bUpToDate = False
 
     def removeDentalPayment(self, iDoctorID, iRowIndex):

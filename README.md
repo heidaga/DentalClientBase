@@ -4,7 +4,15 @@
 * Reset Invoice counter
 * Implement number validation rules in all tables
 
+
 # DentalClientBase Changelog
+
+* v0.10.1.4:
+- Bug fix: refresh act table and payment table after adding
+- Notes column is the last column
+- Better column size policy
+- New acts start with quantity 1 (not 0)
+- Close using Esc key checks for validity
 
 * v0.10.1.3:
 - Bug fix: invoice number beginning from zero after reset
