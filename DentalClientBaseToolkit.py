@@ -317,6 +317,7 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
     def AddDoctorToDatabase(self, dentalClientInstance):
         self.layoutAboutToBeChanged.emit()
         self.database.AddDoctorByInstance(dentalClientInstance)
+        # self.database.SetDefaultActsPricesByDoctorID(dentalClientInstance.id(), dictOfDoctorPrices)
         self.mylist = self.database.GetListDoctors()
         self.layoutChanged.emit()
         self.bUpToDate = False
@@ -327,32 +328,34 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
         self.mylist = self.database.GetListDoctors()
         self.layoutChanged.emit()
         self.bUpToDate = False
-  
+
+####################################################################################
+
 class ActTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
 
         self.database = parent.ParsedDentalDatabase
-        self.defaultPrices = parent.DefaultActsDict
         self.doctorID = -1
         self.mylist = [] #initially not showing anything
         self.bUpToDate = True
         self.header = ACTS_HEADER_DICT.values()
-    # ***************************************************    
-    #private get set functions
+        self.DoctorPrices = None
 
     def SetModelForDoctorByID(self, iDoctorID):
         """ table view using this model shoud use SetModel 
         after a call to this function """
         self.beginResetModel()
+        self.doctorID = iDoctorID
+        self.DoctorPrices = self.database.GetDefaultActsPricesByDoctorID(iDoctorID)
+        # print self.DoctorPrices
         self.mylist = self.database.GetListActsByDoctorID(iDoctorID)
         self.endResetModel()
         return
-    # ***************************************************
+
     def IsUpToDate(self):
         """ return boolean to check if user changed values """
         return self.bUpToDate
-    # ***************************************************
 
     def rowCount(self, parent):
         return len(self.mylist)
@@ -443,26 +446,42 @@ class ActTableModel(QtCore.QAbstractTableModel):
 
             if iCol < 0 or iCol > self.columnCount(None): 
                 return None
+
             elif iCol == COL_ACTDATE:
                 # if value == "": value = self.data(index)
                 dentalAct.SetVarDate(value)
+
             elif iCol == COL_ACTTYPE:
                 if value == "": return False
-                dentalAct.SetVarType(value, self.defaultPrices[value])
+                if self.DoctorPrices is None: return False
+                dentalAct.SetVarType(value, self.DoctorPrices[value])
+
             elif iCol == COL_ACTNOTES:
                 dentalAct.SetVarNotes(value)
+
             elif iCol == COL_ACTUNITPRICE:
-                # if value == "": value = self.data(index)
+                if self.DoctorPrices is None: return False
+                sType = dentalAct.__getitem__(COL_ACTTYPE)
+                # change doctor prices 
+                if sType in self.DoctorPrices: 
+                    self.DoctorPrices[sType] = float(value)
+                # else: 
+                    # print "sType {0} not in self.DoctorPrices (value is {1})".format(sType, value)
                 dentalAct.SetVarUnitPrice(value)
+            
             elif iCol == COL_ACTQTY: 
                 dentalAct.SetVarQty(value)
+            
             elif iCol == COL_ACTSUBTOTAL: 
                 return False 
+            
             elif iCol == COL_ACTPAID: 
                 dentalAct.SetVarPaid(value)
+            
             elif iCol == COL_ACTPATIENT: 
                 dentalAct.SetVarPatientName(value)
 
+            self.database.SetDefaultActsPricesByDoctorID(self.doctorID, self.DoctorPrices)
             self.dataChanged.emit(index, index)
             return True
         return False
@@ -487,7 +506,7 @@ class ActTableModel(QtCore.QAbstractTableModel):
         self.endRemoveRows()
         self.layoutChanged.emit()
         self.bUpToDate = False
-
+####################################################################################
 class PaymentTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
@@ -504,6 +523,7 @@ class PaymentTableModel(QtCore.QAbstractTableModel):
         """ table view using this model shoud use SetModel 
         after a call to this function """
         self.beginResetModel()
+        self.doctorID = iDoctorID
         self.mylist = self.database.GetListPaymentsByDoctorID(iDoctorID)
         self.endResetModel()
         return
@@ -612,7 +632,7 @@ class PaymentTableModel(QtCore.QAbstractTableModel):
         self.endRemoveRows()
         self.layoutChanged.emit()
         self.bUpToDate = False
-
+####################################################################################
 class DentalActDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None, argItemsList = []):
         QtGui.QStyledItemDelegate.__init__(self, parent)
@@ -685,7 +705,6 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
                 ret = toolkit_ShowWarningMessage2(sMsg)
                 if(ret == QMessageBox.Ok):
                     model.setData(index, sComboText, QtCore.Qt.EditRole)
-
 
 """
 EDIT TRIGGERS FOR TABLE VIEWS

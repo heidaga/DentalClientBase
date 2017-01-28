@@ -4,7 +4,7 @@ import os
 # GENERAL SETTINGS
 #########################
 # VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       10       .           1         .         1      '
+__version__ =  '      0       .       10       .           1         .         2      '
 
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
@@ -16,12 +16,14 @@ APP_LOGO_ICO_NAME = "logonew.ico"
 APP_BANNER_NAME = "banner.png"
 APP_MAIN_SCRIPT = 'DentalClientBaseGUI.py'
 
+# selection-background-color: qlineargradient(x1: 0, y1: 0.0, x2: 0.9, y2: 0.9,
+                                # stop: 0 #9999ff, stop: 1 white);
 APP_SETTINGS_COLOR_TABLE ="""
 QTableView 
 { 
-	/*selection-background-color: #e6ecff; */
-	selection-background-color: qlineargradient(x1: 0, y1: 0.0, x2: 0.9, y2: 0.9,
-                                stop: 0 #9999ff, stop: 1 white);
+	selection-background-color: #e6ecff;
+	/* selection-background-color: qlineargradient(x1: 0, y1: 0.0, x2: 0.9, y2: 0.9,
+                                stop: 0 #9999ff, stop: 1 white);*/
 	selection-color: black; 
 }
 
@@ -134,7 +136,7 @@ HEADERS_TO_EXCLUDE_FROM_INVOICE = [ COL_ACTNOTES ]
 
 
 #########################
-# BOOLEAN SWITCHES
+# OTHER SETTINGS/SWITCHES
 #########################
 
 BOOLSETTING_Initialize_Columnsize_On_Client_Activation = True
@@ -142,7 +144,7 @@ BOOLSETTING_Confirm_before_exit_application = True
 BOOLSETTING_Preview_exported_invoice_in_Invoice_Viewer = True
 BOOLSETTING_Preview_exported_invoice_in_internet_browser = False
 BOOLSETTING_Convert_exported_invoice_to_pdf_without_preview = True
-
+INTSETTING_Maximum_number_of_invoice_tabs_in_Invoice_Viewer = 5
 
 
 ###############################################

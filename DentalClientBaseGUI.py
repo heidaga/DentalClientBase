@@ -337,12 +337,13 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.appsettings = GeneralSettings(self)
         self.NewDoctorDialog = QNewDoctorDialog(self)
 
-        list_doctors = []
-        self.DefaultActsDict = self.appsettings.GetDefaultActs()
-        self.ParsedDentalDatabase = self.appsettings.GetDoctorsActs() 
-        if type(self.ParsedDentalDatabase) == TYPE_DENTAL_DATABASE:
-            if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
-                list_doctors = self.ParsedDentalDatabase.GetListDoctors()
+        # ONLY FOR DEBUG *********************************
+        # list_doctors = []
+        # self.DefaultActsDict = self.appsettings.GetDefaultActs()
+        self.ParsedDentalDatabase = self.appsettings.GetDoctorsActs()
+        # if type(self.ParsedDentalDatabase) == TYPE_DENTAL_DATABASE:
+        #     if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
+        #         list_doctors = self.ParsedDentalDatabase.GetListDoctors()
 
         # DECLARE MODELS *********************************
         self.TableModelDoctors = DoctorTableModel(self)
@@ -380,7 +381,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked ) # AllEditTriggers # NoEditTriggers 
         table_view.setDragDropOverwriteMode(False)
         # table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
-        table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectItems)
+        table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows) # SelectItems
         # table_view.setTextElideMode(QtCore.Qt.ElideNone)
         table_view.setShowGrid(False)
         sFont = APP_SETTINGS_TABLE_ACTS_FONT
@@ -398,7 +399,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # enable sorting
         table_view.setSortingEnabled(True)        
         # Set delegates
-        qDelegateAct = DentalActDelegate(table_view, self.DefaultActsDict.keys())
+        sActTypeDict = self.appsettings.GetDefaultActs()
+        qDelegateAct = DentalActDelegate(table_view, sActTypeDict.keys())
         table_view.setItemDelegate(qDelegateAct)
  
         # TABLE VIEW : PAYMENTS *********************************
@@ -451,7 +453,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
-            self.close()
+            self.OnClose()
         # if event.key() == QtCore.Qt.Key_F4:
         #     self.OpenActWindow("XXX")
 
@@ -637,11 +639,16 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
     def OnAddDoctor(self):
         qDialog = self.NewDoctorDialog
         qDialog.cleanLineEdits()
-        # qDialog.show()
-        # qDialog.activateWindow()
         if qDialog.exec_() == QtGui.QDialog.Accepted:
             newDentalClient = qDialog.getNewDoctor()
-            # self.ParsedDentalDatabase.AddDoctorByInstance(newDentalClient)
+            if newDentalClient is None:
+                sMsg = "OnAddDoctor: newDentalClient is None."
+                sMsg += "I couldn't create a DentalClient from the params given by the opened dialog" 
+                toolkit_ReportUndefinedBehavior(sMsg)
+                return 0
+            dictActsPricesFromSettings = self.appsettings.GetDefaultActs()
+            print "dictActsPricesFromSettings", dictActsPricesFromSettings
+            newDentalClient.SetDoctorPrices(dictActsPricesFromSettings)
             self.TableModelDoctors.AddDoctorToDatabase(newDentalClient)      
         return 0 
 
@@ -724,12 +731,13 @@ class QNewDoctorDialog(QtGui.QDialog):
     
     def getNewDoctor(self):
         """ Returns a DentalClient instance """
-        return DentalClient(self.ui.firstName.text(),
-                            self.ui.lastName.text(),
-                            self.ui.phoneNumber.text(),
-                            self.ui.email.text(),
-                            self.ui.address.text())
-
+        fn = str(self.ui.firstName.text()).strip()
+        ln = str(self.ui.lastName.text()).strip()
+        pn = str(self.ui.phoneNumber.text()).strip()
+        em = str(self.ui.email.text()).strip()
+        ad = str(self.ui.address.text()).strip()
+        return DentalClient(fn, ln, pn, em, ad)
+                            
     def accept(self):
         if self.validate():
             return QtGui.QDialog.accept(self)

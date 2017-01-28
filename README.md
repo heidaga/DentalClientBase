@@ -1,9 +1,18 @@
-# DentalClientBase
+# DentalClientBase Changelog
 
-# Changelog
+* v0.10.1.2:
+- Completed feature of unique unit prices per doctor:
+  changeable in the future without affecting 
+  previous history entries
+- Bug fix: cannot add acts in act table
+- Bug fix: Pressing escape exits without saving to database
+- Acts table row selection
+- Changed selection color
+- Changed closable tabs to normal tabs + shape change in UI 
+- Strip New Doctor entry details from spaces
 
 * v0.10.1.1:
-- Added boolean switch to control PDF exprot
+- Added boolean switch to control PDF export
 - Bug fix link between database payment and invoice
 
 * v0.10.0.0:
@@ -14,7 +23,6 @@
 - Fixed connection problem between acts and payments tables
 - Added new boolean settings switches
 - Minor changes to setup file
-
 
 * v0.9.0.2:
 - bug fix in py2exe setup (wrong path to icon)

@@ -149,10 +149,12 @@ class DentalClient:
 
 		
 	def AppendActByDetails(self, sDate, sPatientName, sType, iQty):
-		if not sType in self.defaultprices:
-			print("Warning::AppendActByDetails: sType {0} not found".format(sType))
-			return
-		fUnitPrice = self.defaultprices[sType]
+		fUnitPrice = 0.0
+		if sType in self.defaultprices:
+			fUnitPrice = self.defaultprices[sType]
+		# else:
+			# print("Warning::AppendActByDetails: sType {0} not found".format(sType))
+			# return
 		cNewAct = DentalAct(sDate, sPatientName, sType, iQty, fUnitPrice)
 		self.acts.append(cNewAct)
 		
@@ -196,7 +198,10 @@ class DentalClient:
 		then the output value is Qt-formatted in the GUI class 
 	"""
 
-	def AssignPersonalDefaultPrices(self, dictOfDefaultPrices):
+	def GetDoctorPrices(self):
+		return dict(self.defaultprices)
+	
+	def SetDoctorPrices(self, dictOfDefaultPrices):
 		self.defaultprices = dict(dictOfDefaultPrices)
 		return
 
@@ -324,10 +329,12 @@ class DentalDatabase:
 								 dentalClientInstance.Phone,
 								 dentalClientInstance.Email,
 								 dentalClientInstance.Address)
+		newdoctor.SetDoctorPrices(dentalClientInstance.GetDoctorPrices())
+		print "dentalClientInstance.GetDoctorPrices()", dentalClientInstance.GetDoctorPrices()
 		newdoctor_id = newdoctor.id()
 		if newdoctor_id in self.ClientsMap:
 			print "Doctor is exists already in the database"
-			return 0
+			return -1
 		else: 
 			self.ClientsMap[newdoctor_id] = newdoctor
 			return newdoctor_id
@@ -381,13 +388,19 @@ class DentalDatabase:
 	def GetNbPaymentsByDoctorID(self, iDoctorID):
 		return len(self.GetListPaymentsByDoctorID(iDoctorID))
 
-
-	def SetDefaultActsByDoctorID(self, iDoctorID, dictOfDefaultPrices):
-		""" returns a list of DentalAct instances """
+	def GetDefaultActsPricesByDoctorID(self, iDoctorID):
+		""" returns a dictionary of acts and their 
+		default unit prices for a given doctor """
 		doctor = self.GetDoctorFromID(iDoctorID)
 		if doctor is None: return 0
-		else: 
-			doctor.AssignPersonalDefaultPrices(dictOfDefaultPrices)
+		return doctor.GetDoctorPrices()
+
+	def SetDefaultActsPricesByDoctorID(self, iDoctorID, dictOfDefaultPrices):
+		""" returns a dict """
+		doctor = self.GetDoctorFromID(iDoctorID)
+		if doctor is None: return 0
+		doctor.SetDoctorPrices(dictOfDefaultPrices)
+		return 0
 
 instance_of_dental_database = DentalDatabase()
 TYPE_DENTAL_DATABASE = type(instance_of_dental_database)
