@@ -2,10 +2,15 @@
 
 * Add settings/switches to Settings window
 * Reset Invoice counter
-* Implement number validation rules in all tables
+* Implement number validation rules in all tables (to refuse negatives, alphanumerics ...)
 
 
 # DentalClientBase Changelog
+
+* v0.10.2.5:
+- Add totals for acts and payments
+- Update totals on doctor new selection
+- Bug fix: date choice in payment table
 
 * v0.10.1.4:
 - Bug fix: refresh act table and payment table after adding

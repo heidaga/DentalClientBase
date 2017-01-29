@@ -635,6 +635,39 @@ class PaymentTableModel(QtCore.QAbstractTableModel):
         self.layoutChanged.emit()
         self.bUpToDate = False
 ####################################################################################
+class DentalPaymentDelegate(QtGui.QStyledItemDelegate):
+    def __init__(self, parent = None):
+        QtGui.QStyledItemDelegate.__init__(self, parent)
+        
+    def createEditor(self, parent, option, index):
+        iCol = index.column()
+        if(iCol in [ COL_PAYMENTSUM ]):
+            editor = QtGui.QLineEdit(parent)
+            return editor  
+        elif(iCol == COL_PAYMENTDATE):
+            editor = QtGui.QDateEdit(parent)
+            editor.setDisplayFormat(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            editor.setCalendarPopup(True)
+            return editor
+        
+    def setEditorData(self, editor, index):
+        if editor.metaObject().className() == "QLineEdit":
+            # val can be a float (unit price) or string (patient name)
+            val = index.model().data(index, QtCore.Qt.DisplayRole)
+            editor.setText(str(val))
+        elif editor.metaObject().className() == "QDateEdit":
+            sDate = index.model().data(index, QtCore.Qt.DisplayRole)
+            qDate = QtCore.QDate.fromString(sDate, APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            editor.setDate(qDate)
+
+    def setModelData(self, editor, model, index):
+     
+        if editor.metaObject().className() == "QLineEdit":
+            model.setData(index, editor.text(), QtCore.Qt.EditRole)
+
+        elif editor.metaObject().className() == "QDateEdit":
+            model.setData(index, editor.date().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE), QtCore.Qt.EditRole)
+
 class DentalActDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None, argItemsList = []):
         QtGui.QStyledItemDelegate.__init__(self, parent)
@@ -707,6 +740,7 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
                 ret = toolkit_ShowWarningMessage2(sMsg)
                 if(ret == QMessageBox.Ok):
                     model.setData(index, sComboText, QtCore.Qt.EditRole)
+
 
 """
 EDIT TRIGGERS FOR TABLE VIEWS

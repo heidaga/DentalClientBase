@@ -352,9 +352,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.TableModelDoctors = DoctorTableModel(self)
         self.TableModelActs = ActTableModel(self)
         self.TableModelPayments = PaymentTableModel(self)
-        # ************************************************
 
-        # TABLE VIEW : DOCTORS ***************************
+        # CONNECT MODELS WITH MAN APP (IF NECESSCARY) *******
+        self.TableModelActs.dataChanged.connect(self.OnTableDataChange)
+        self.TableModelPayments.dataChanged.connect(self.OnTableDataChange)
+
+        # TABLE VIEW : DOCTORS ******************************
         table_view = self.ui.m_tableclients
         # table_view.setWordWrap(True)
         table_view.setModel(self.TableModelDoctors)
@@ -431,10 +434,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # enable sorting
         table_view.setSortingEnabled(True)        
         # Set delegates
-        # qDelegateAct = DentalPaymentDelegate(table_view, self.DefaultActsDict.keys())
-        # table_view.setItemDelegate(qDelegateAct)
+        qDelegatePayment = DentalPaymentDelegate(table_view)
+        table_view.setItemDelegate(qDelegatePayment)
 
 
+        self.ui.LE_TotalActs.setText("0.0")
+        self.ui.LE_TotalPayments.setText("0.0")
         self.ui.GB_InvoiceViewer.setVisible(False)
         self.ui.TabInvoiceViewer.setCurrentIndex(0)
         # self.ui.webViewMesseger.load(QtCore.QUrl('https://web.whatsapp.com/'))
@@ -452,6 +457,20 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_Settings.setStyleSheet("Text-align:left")
         return 0
 
+    def SumAndWriteActs(self):
+        listDentalActs = self.ParsedDentalDatabase.GetListActsByDoctorID(self.ActiveClientID)
+        fGrandTotal = 0.0
+        for jAct in listDentalActs: fGrandTotal += jAct.SubTotal
+        self.ui.LE_TotalActs.setText("Total Payments: {0}".format(fGrandTotal))
+        return 0
+
+    def SumAndWritePayments(self):
+        listDentalPayments = self.ParsedDentalDatabase.GetListPaymentsByDoctorID(self.ActiveClientID)
+        fPaid = 0.0
+        for jPayment in listDentalPayments: fPaid += jPayment.Sum
+        self.ui.LE_TotalPayments.setText("Total Payments: {0}".format(fPaid))
+        return 0
+
     ###### Member functions related to Qt
 
     def keyPressEvent(self, event):
@@ -462,6 +481,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
         # if event.key() == QtCore.Qt.Key_F10:
         # 	red alert 2 taunts !! EASTER EGG
+
+    def OnTableDataChange(self, topleft_index, bottom_right_index):
+        if self.ActiveClientID is None: return 0
+        if self.sender() == self.TableModelActs: self.SumAndWriteActs()
+        elif self.sender() == self.TableModelPayments: self.SumAndWritePayments()
+        else: return 0
 
     def OnClose(self):
         bUTD1 = self.TableModelDoctors.IsUpToDate() 
@@ -689,6 +714,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             self.ui.m_tableacts.resizeColumnsToContents()
             self.ui.m_tablepayments.resizeColumnsToContents()
 
+        # Update totals for newly selected doctor
+        self.SumAndWriteActs()
+        self.SumAndWritePayments()
         return 0
 
 
