@@ -388,14 +388,14 @@ class DentalDatabase:
 	def GetNbPaymentsByDoctorID(self, iDoctorID):
 		return len(self.GetListPaymentsByDoctorID(iDoctorID))
 
-	def GetDefaultActsPricesByDoctorID(self, iDoctorID):
+	def GetDoctorPricesByDoctorID(self, iDoctorID):
 		""" returns a dictionary of acts and their 
 		default unit prices for a given doctor """
 		doctor = self.GetDoctorFromID(iDoctorID)
 		if doctor is None: return 0
 		return doctor.GetDoctorPrices()
 
-	def SetDefaultActsPricesByDoctorID(self, iDoctorID, dictOfDefaultPrices):
+	def SetDoctorPricesByDoctorID(self, iDoctorID, dictOfDefaultPrices):
 		""" returns a dict """
 		doctor = self.GetDoctorFromID(iDoctorID)
 		if doctor is None: return 0

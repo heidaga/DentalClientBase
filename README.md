@@ -1,11 +1,19 @@
 # DentalClientBase To-Do list
-
+*****************************
 * Add settings/switches to Settings window
 * Reset Invoice counter
 * Implement number validation rules in all tables (to refuse negatives, alphanumerics ...)
 
-
 # DentalClientBase Changelog
+*****************************
+
+* v0.11.0.0:
+- Major change: compare doctor prices with settings
+  and handle differences in acts
+- Changes to DefaultPrices in settings or DoctorPrices
+  are reported in a separate table for each doctor
+- Feature: single click to edit table
+- TODO: unhandled signals emitted when prices get changed
 
 * v0.10.2.5:
 - Add totals for acts and payments

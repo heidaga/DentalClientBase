@@ -73,21 +73,26 @@ def HashClientID(sFirstname, sLastName, sPhone):
 # ***********************************************************************
 # ***********************************************************************
 
-def toolkit_populate_table_from_dict(table_widget, values_dict):
+def toolkit_populate_table_from_dict(table_widget, values_dict, qFlags = None ):
+    if qFlags is None: 
+        qFlags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
     table_widget.setRowCount(len(values_dict))
     # table_widget.setColumnCount(2)
     # table_widget.setHorizontalHeaderLabels(['name', 'value'])
     for iRow, field in enumerate(values_dict):
         dValue = values_dict[field]
-        toolkit_create_formatted_cell(table_widget, iRow, 0, field.upper() )        
-        toolkit_create_formatted_cell(table_widget, iRow, 1, str(dValue) )
+        toolkit_create_formatted_cell(table_widget, iRow, 0, field.upper(), qFlags)        
+        toolkit_create_formatted_cell(table_widget, iRow, 1, str(dValue), qFlags )
 
-def toolkit_create_formatted_cell(table_widget, iRow, iCol, value):
+def toolkit_create_formatted_cell(table_widget, iRow, iCol, value, qFlags):
     qItem = QtGui.QTableWidgetItem(value)
     qItem.setTextAlignment( SETTINGS_ACTNAME_ALIGNEMENT )
     sFont = APP_SETTINGS_TABLE_DEFAULTACTS_FONT
     iFontSize = APP_SETTINGS_TABLE_DEFAULTACTS_FONTSIZE
     qItem.setFont(QtGui.QFont(sFont, iFontSize, QtGui.QFont.Bold))
+    qItem.setFlags(qFlags)
+    if qFlags == QtCore.Qt.ItemIsEnabled:
+        qItem.setBackground(QColor(240,240,255))
     table_widget.setItem(iRow, iCol, qItem)
     return 0
 
@@ -166,6 +171,15 @@ def toolkit_new_item(table_widget, iRow, iCol, sText):
     qItem.setFlags(QtCore.Qt.ItemIsEnabled)
     return
 
+def toolkit_compare_dicts(d1, d2):
+    d1_keys = set(d1.keys())
+    d2_keys = set(d2.keys())
+    intersect_keys = d1_keys.intersection(d2_keys)
+    added = d1_keys - d2_keys
+    removed = d2_keys - d1_keys
+    modified = {o : (d1[o], d2[o]) for o in intersect_keys if d1[o] != d2[o]}
+    same = set(o for o in intersect_keys if d1[o] == d2[o])
+    return added, removed, modified #, same
 
 ##################################################################
 ############### MODEL AND DELEGATES ##############################
@@ -188,8 +202,19 @@ class DoctorTableView(QtGui.QTableView):
 
 class ActTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
+        
         QtGui.QTableView.__init__(self, *args, **kwargs)
+        
+        def mousePressEvent(self, qMouseEvent):
+            if (qMouseEvent.button() == Qt.LeftButton):
+                qModelIndex = indexAt(qMouseEvent.pos())
+                # column you want to use for one click
+                if (qModelIndex.column() == COL_ACTTYPE):  
+                    edit(qModelIndex)
 
+            QtGui.QTableView.mousePressEvent(qMouseEvent)
+
+###################################################################################
 class DoctorTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
@@ -317,7 +342,7 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
     def AddDoctorToDatabase(self, dentalClientInstance):
         self.layoutAboutToBeChanged.emit()
         self.database.AddDoctorByInstance(dentalClientInstance)
-        # self.database.SetDefaultActsPricesByDoctorID(dentalClientInstance.id(), dictOfDoctorPrices)
+        # self.database.SetDoctorPricesByDoctorID(dentalClientInstance.id(), dictOfDoctorPrices)
         self.mylist = self.database.GetListDoctors()
         self.layoutChanged.emit()
         self.bUpToDate = False
@@ -328,10 +353,11 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
         self.mylist = self.database.GetListDoctors()
         self.layoutChanged.emit()
         self.bUpToDate = False
-
-####################################################################################
-
+###################################################################################
 class ActTableModel(QtCore.QAbstractTableModel):
+
+    DoctorPricesChanged = QtCore.Signal()
+
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
 
@@ -347,7 +373,7 @@ class ActTableModel(QtCore.QAbstractTableModel):
         after a call to this function """
         self.beginResetModel()
         self.doctorID = iDoctorID
-        self.DoctorPrices = self.database.GetDefaultActsPricesByDoctorID(iDoctorID)
+        self.DoctorPrices = self.database.GetDoctorPricesByDoctorID(iDoctorID)
         # print self.DoctorPrices
         self.mylist = self.database.GetListActsByDoctorID(iDoctorID)
         self.endResetModel()
@@ -443,6 +469,7 @@ class ActTableModel(QtCore.QAbstractTableModel):
             iCol = index.column()            
             dentalAct = self.mylist[iRow]
             self.bUpToDate = False
+            bDictPricesChanged = False
 
             if iCol < 0 or iCol > self.columnCount(None): 
                 return None
@@ -452,7 +479,6 @@ class ActTableModel(QtCore.QAbstractTableModel):
                 dentalAct.SetVarDate(value)
 
             elif iCol == COL_ACTTYPE:
-                if value == "": return False
                 if self.DoctorPrices is None: return False
                 dentalAct.SetVarType(value, self.DoctorPrices[value])
 
@@ -460,14 +486,11 @@ class ActTableModel(QtCore.QAbstractTableModel):
                 dentalAct.SetVarNotes(value)
 
             elif iCol == COL_ACTUNITPRICE:
-                if self.DoctorPrices is None: return False
                 sType = dentalAct.__getitem__(COL_ACTTYPE)
                 # change doctor prices 
-                if sType in self.DoctorPrices: 
-                    self.DoctorPrices[sType] = float(value)
-                # else: 
-                    # print "sType {0} not in self.DoctorPrices (value is {1})".format(sType, value)
+                self.DoctorPrices[sType] = float(value)
                 dentalAct.SetVarUnitPrice(value)
+                bDictPricesChanged = True
             
             elif iCol == COL_ACTQTY: 
                 dentalAct.SetVarQty(value)
@@ -481,7 +504,10 @@ class ActTableModel(QtCore.QAbstractTableModel):
             elif iCol == COL_ACTPATIENT: 
                 dentalAct.SetVarPatientName(value)
 
-            self.database.SetDefaultActsPricesByDoctorID(self.doctorID, self.DoctorPrices)
+            if bDictPricesChanged:
+                self.database.SetDoctorPricesByDoctorID(self.doctorID, self.DoctorPrices)
+                self.DoctorPricesChanged.emit()
+            
             self.dataChanged.emit(index, index)
             return True
         return False
@@ -671,7 +697,8 @@ class DentalPaymentDelegate(QtGui.QStyledItemDelegate):
 class DentalActDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent = None, argItemsList = []):
         QtGui.QStyledItemDelegate.__init__(self, parent)
-        self.list_of_default_acts = [sItem.upper() for sItem in argItemsList]
+        self.list_of_default_acts = None
+        self.setActTypesStringList(argItemsList)
 
     def createEditor(self, parent, option, index):
         iCol = index.column()
@@ -716,7 +743,6 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
             itemID = editor.findText(sComboText, QtCore.Qt.MatchExactly)
             editor.setCurrentIndex(itemID)
 
-  
     def setModelData(self, editor, model, index):
                 
         if editor.metaObject().className() == "QLineEdit":
@@ -740,6 +766,12 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
                 ret = toolkit_ShowWarningMessage2(sMsg)
                 if(ret == QMessageBox.Ok):
                     model.setData(index, sComboText, QtCore.Qt.EditRole)
+
+    def setActTypesStringList(self, sList):
+        """ this method only loads the Types without prices as these can vary 
+            between clients.
+        """
+        self.list_of_default_acts = [sItem.upper() for sItem in sList]
 
 
 """

@@ -4,7 +4,7 @@ import os
 # GENERAL SETTINGS
 #########################
 # VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       10       .           2         .         5      '
+__version__ =  '      0       .       11       .           0         .         0      '
 
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
@@ -118,7 +118,7 @@ PAYMENT_TABLE_COLUMNSIZE_SUM    = 0.5 # 100
 # TABLE- DEFAULT ACTS
 #########################
 APP_SETTINGS_TABLE_DEFAULTACTS_FONT = "MS Shell Dlg 2" 
-APP_SETTINGS_TABLE_DEFAULTACTS_FONTSIZE = 10 
+APP_SETTINGS_TABLE_DEFAULTACTS_FONTSIZE = 8 
 
 
 #########################

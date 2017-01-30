@@ -42,6 +42,8 @@ verbose = False
 class GeneralSettings(QtGui.QMainWindow):
     """ Openv window containing all the acts for a given client """
 
+    DefaultPricesChanged = QtCore.Signal()
+
     def __init__(self, parent=None):
     	super(GeneralSettings, self).__init__(parent)
 
@@ -152,9 +154,19 @@ class GeneralSettings(QtGui.QMainWindow):
 
     ###### Member functions related to Qt
     def OnDatabaseLoad(self):
+        if(self.sender() == self.ui.PB_LoadDatabaseDefaultActs):
+            sMsg = "Are you sure you want to change the default acts-prices database ?"
+            reply = toolkit_ShowWarningMessage2(sMsg)
+            if reply != QMessageBox.Ok: return 0
+
+        if(self.sender() == self.ui.PB_LoadDatabaseDoctors):
+            sMsg = "Are you sure you want to change the doctors database ?"
+            reply = toolkit_ShowWarningMessage2(sMsg)
+            if reply != QMessageBox.Ok: return 0
+
+        # Get user-chosen file name
         filename = None
         filters = ["Dental Database files (*.dat *.pkl)", "Any files (*)"]
-
         dialog = QtGui.QFileDialog(self, "Open Dental Database", directory = APP_DIR)
         dialog.setNameFilters(filters)
         dialog.setViewMode(QtGui.QFileDialog.Detail)
@@ -164,7 +176,7 @@ class GeneralSettings(QtGui.QMainWindow):
             filename = dialog.selectedFiles()[0]
         if filename == None: return 0
         
-        # print "filename = ", filename
+        # Load new databases
         if(self.sender() == self.ui.PB_LoadDatabaseDefaultActs):
             self.DefaultActsDatabasePath = filename
             self.ui.mLE_DatabaseDefaultActs.setText(self.DefaultActsDatabasePath)
@@ -218,6 +230,7 @@ class GeneralSettings(QtGui.QMainWindow):
             if bStatus:
                 self.ParseUserActsFromTable()
                 pkl_save(self.DefaultActs, self.DefaultActsDatabasePath)
+                self.bUpToDate = True
                 self.close()
             else:
                 sMsg = "The default acts/price table contains empty or negative cells."
@@ -230,12 +243,14 @@ class GeneralSettings(QtGui.QMainWindow):
         iRowCount = table.rowCount()
         table.setRowCount(iRowCount+1)
         # iRow = table.currentRow()
+        self.bUpToDate = False
         return 0 
 
     def OnRemoveAct(self):
         table = self.ui.m_tabledefaultacts
         iRow = table.rowCount()
         table.setRowCount(iRow-1)
+        self.bUpToDate = False
         return 0 
 
     def OnDefaultsChange(self, iRow, iCol):
@@ -273,6 +288,9 @@ class GeneralSettings(QtGui.QMainWindow):
             sName = table.item(iRow, 0).text()
             sPrice = table.item(iRow, 1).text()
             self.DefaultActs[sName.upper()] = float(sPrice)
+
+        self.DefaultPricesChanged.emit()
+        
         return 0
 
     def GetPath_DoctorActsDatabase(self):
@@ -317,33 +335,20 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_AddDoctor.setEnabled(1)
         self.ui.PB_RemoveDoctor.setEnabled(1)
 
-        # SLOTS
-        self.ui.PB_OpenInvoiceFolder.clicked.connect(self.OnOpenInvoiceFolder)
-        self.ui.PB_ExportInvoice.clicked.connect(self.OnExportInvoice)
-        self.ui.PB_Calculator.clicked.connect(self.OnSpawnCalculator)
-        self.ui.PB_Close.clicked.connect(self.OnClose)
-        self.ui.PB_Settings.clicked.connect(self.OnOpenSettings)
-        self.ui.PB_AddDoctor.clicked.connect(self.OnAddDoctor)
-        self.ui.PB_RemoveDoctor.clicked.connect(self.OnRemoveDoctor)
-        self.ui.PB_AddAct.clicked.connect(self.OnAddAct)
-        self.ui.PB_RemoveAct.clicked.connect(self.OnRemoveAct)
-        self.ui.PB_AddPayment.clicked.connect(self.OnAddPayment)
-        self.ui.PB_RemovePayment.clicked.connect(self.OnRemovePayment)
-        self.ui.PB_ToggleInvoiceViewer.clicked.connect(self.OnShowHideInvoiceViewer)
-        self.ui.m_tableclients.clicked.connect(self.OnActivateClient)
+        # CLASS INSTANCES
+        self.AppSettings = GeneralSettings(self)
+        self.NewDoctorDialog = QNewDoctorDialog(self)
 
         date = time.strftime("%d/%m/%Y")
         stime = time.strftime("%H:%M")
         self.ui.LE_date.setText(date)
         self.ui.LE_time.setText(stime)
 
-        self.appsettings = GeneralSettings(self)
-        self.NewDoctorDialog = QNewDoctorDialog(self)
 
         # ONLY FOR DEBUG *********************************
         # list_doctors = []
-        # self.DefaultActsDict = self.appsettings.GetDefaultActs()
-        self.ParsedDentalDatabase = self.appsettings.GetDoctorsActs()
+        # self.DefaultActsDict = self.AppSettings.GetDefaultActs()
+        self.ParsedDentalDatabase = self.AppSettings.GetDoctorsActs()
         # if type(self.ParsedDentalDatabase) == TYPE_DENTAL_DATABASE:
         #     if(self.ParsedDentalDatabase.GetNbDoctors() > 0):
         #         list_doctors = self.ParsedDentalDatabase.GetListDoctors()
@@ -358,7 +363,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.TableModelPayments.dataChanged.connect(self.OnTableDataChange)
 
         # TABLE VIEW : DOCTORS ******************************
-        table_view = self.ui.m_tableclients
+        table_view = self.ui.m_TableViewClients
         # table_view.setWordWrap(True)
         table_view.setModel(self.TableModelDoctors)
         table_view.setShowGrid(False)
@@ -381,10 +386,10 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         table_view.setSortingEnabled(True)
         
         # TABLE VIEW : ACTS *********************************
-        table_view = self.ui.m_tableacts
+        table_view = self.ui.m_TableViewActs
         table_view.setWordWrap(True)
         table_view.setModel(self.TableModelActs)
-        table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked ) # AllEditTriggers # NoEditTriggers 
+        table_view.setEditTriggers( QtGui.QAbstractItemView.AllEditTriggers ) # AllEditTriggers # NoEditTriggers 
         table_view.setDragDropOverwriteMode(False)
         # table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows) # SelectItems
@@ -405,15 +410,15 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # enable sorting
         table_view.setSortingEnabled(True)        
         # Set delegates
-        sActTypeDict = self.appsettings.GetDefaultActs()
-        qDelegateAct = DentalActDelegate(table_view, sActTypeDict.keys())
-        table_view.setItemDelegate(qDelegateAct)
+        sActTypeDict = self.AppSettings.GetDefaultActs()
+        self.qDelegateAct = DentalActDelegate(table_view, sActTypeDict.keys())
+        table_view.setItemDelegate(self.qDelegateAct)
  
         # TABLE VIEW : PAYMENTS *********************************
-        table_view = self.ui.m_tablepayments
+        table_view = self.ui.m_TableViewPayments
         table_view.setWordWrap(True)
         table_view.setModel(self.TableModelPayments)
-        table_view.setEditTriggers( QtGui.QAbstractItemView.DoubleClicked ) # AllEditTriggers # NoEditTriggers 
+        table_view.setEditTriggers( QtGui.QAbstractItemView.AllEditTriggers ) # AllEditTriggers # NoEditTriggers 
         table_view.setDragDropOverwriteMode(False)
         # table_view.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         table_view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -434,8 +439,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         # enable sorting
         table_view.setSortingEnabled(True)        
         # Set delegates
-        qDelegatePayment = DentalPaymentDelegate(table_view)
-        table_view.setItemDelegate(qDelegatePayment)
+        self.qDelegatePayment = DentalPaymentDelegate(table_view)
+        table_view.setItemDelegate(self.qDelegatePayment)
 
 
         self.ui.LE_TotalActs.setText("0.0")
@@ -444,9 +449,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.TabInvoiceViewer.setCurrentIndex(0)
         # self.ui.webViewMesseger.load(QtCore.QUrl('https://web.whatsapp.com/'))
         
+        self.ui.m_TableWidgetPrices.setEnabled(0)
         self.ActiveClientID = None
         self.LastKnownActType = ""
+
         self.InitStyle()
+        self.InitSlots()
         
     # ********************************************************************************
 
@@ -455,20 +463,46 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_OpenInvoiceFolder.setStyleSheet("Text-align:left")
         self.ui.PB_Calculator.setStyleSheet("Text-align:left")
         self.ui.PB_Settings.setStyleSheet("Text-align:left")
+        self.ui.LE_TotalActs.setStyleSheet("color: rgb(0, 0, 240)")
+        self.ui.LE_TotalPayments.setStyleSheet("color: rgb(0, 0, 240)")
         return 0
+
+    def InitSlots(self):
+        self.ui.PB_OpenInvoiceFolder.clicked.connect(self.OnOpenInvoiceFolder)
+        self.ui.PB_ExportInvoice.clicked.connect(self.OnExportInvoice)
+        self.ui.PB_Calculator.clicked.connect(self.OnSpawnCalculator)
+        self.ui.PB_Close.clicked.connect(self.OnClose)
+        self.ui.PB_Settings.clicked.connect(self.OnOpenSettings)
+        self.ui.PB_AddDoctor.clicked.connect(self.OnAddDoctor)
+        self.ui.PB_RemoveDoctor.clicked.connect(self.OnRemoveDoctor)
+        self.ui.PB_AddAct.clicked.connect(self.OnAddAct)
+        self.ui.PB_RemoveAct.clicked.connect(self.OnRemoveAct)
+        self.ui.PB_AddPayment.clicked.connect(self.OnAddPayment)
+        self.ui.PB_RemovePayment.clicked.connect(self.OnRemovePayment)
+        self.ui.PB_ToggleInvoiceViewer.clicked.connect(self.OnShowHideInvoiceViewer)
+        self.ui.m_TableViewClients.clicked.connect(self.OnActivateClient)
+
+        self.AppSettings.DefaultPricesChanged.connect(self.OnPricesChanged)
+        self.TableModelActs.DoctorPricesChanged.connect(self.OnPricesChanged)
+
+
+    @QtCore.Slot()
+    def OnPricesChanged():
+       if self.ActiveClientID is not None:
+        self.UpdateDoctorDetailsByID()
 
     def SumAndWriteActs(self):
         listDentalActs = self.ParsedDentalDatabase.GetListActsByDoctorID(self.ActiveClientID)
         fGrandTotal = 0.0
         for jAct in listDentalActs: fGrandTotal += jAct.SubTotal
-        self.ui.LE_TotalActs.setText("Total Payments: {0}".format(fGrandTotal))
+        self.ui.LE_TotalActs.setText(str(fGrandTotal))
         return 0
 
     def SumAndWritePayments(self):
         listDentalPayments = self.ParsedDentalDatabase.GetListPaymentsByDoctorID(self.ActiveClientID)
         fPaid = 0.0
         for jPayment in listDentalPayments: fPaid += jPayment.Sum
-        self.ui.LE_TotalPayments.setText("Total Payments: {0}".format(fPaid))
+        self.ui.LE_TotalPayments.setText(str(fPaid))
         return 0
 
     ###### Member functions related to Qt
@@ -494,9 +528,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         bUTD3 = self.TableModelPayments.IsUpToDate()
         bExitWithoutSave = bUTD1 and bUTD2 and bUTD3
         if(not bExitWithoutSave):
-            sDatabasePath = self.appsettings.GetPath_DoctorActsDatabase()
+            sDatabasePath = self.AppSettings.GetPath_DoctorActsDatabase()
             pkl_save(self.ParsedDentalDatabase, sDatabasePath)
-        self.appsettings.WriteSettings() # re-write settings.ini
+        self.AppSettings.WriteSettings() # re-write settings.ini
 
         if not BOOLSETTING_Confirm_before_exit_application:
             return 0
@@ -507,8 +541,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     def OnOpenSettings(self):
         # avoid multiple open
-        self.appsettings.show()
-        self.appsettings.activateWindow()
+        self.AppSettings.show()
+        self.AppSettings.activateWindow()
         return 0
 
     def OnShowHideInvoiceViewer(self):
@@ -552,7 +586,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
         sCurrentMonth = sCurrentDate.split("/")[1]
         sCurrentYear = sCurrentDate.split("/")[2]
-        iInvoiceID = self.appsettings.GetLastInvoiceNo() + 1
+        iInvoiceID = self.AppSettings.GetLastInvoiceNo() + 1
         dentalDoctor = self.ParsedDentalDatabase.GetDoctorFromID(doctorID)
         listDentalPayments = self.ParsedDentalDatabase.GetListPaymentsByDoctorIdByDate(doctorID, sCurrentMonth, sCurrentYear)
         listDentalActs = self.ParsedDentalDatabase.GetListActsByDoctorIdByDate(doctorID, sCurrentMonth, sCurrentYear)
@@ -573,7 +607,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
         # increment invoice counter after successful export 
         if sExportedInvoice != "" :
-            self.appsettings.SetLastInvoiceNo(iInvoiceID)
+            self.AppSettings.SetLastInvoiceNo(iInvoiceID)
 
             if BOOLSETTING_Preview_exported_invoice_in_internet_browser:
                 webbrowser.open_new_tab(sExportedInvoice)
@@ -626,7 +660,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
     def OnRemoveAct(self):
         if not self.isDoctorSelected():
             toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
-        table_view = self.ui.m_tableacts
+        table_view = self.ui.m_TableViewActs
         selectModel = table_view.selectionModel()
         selectedIndexes = selectModel.selectedIndexes()
         if len(selectedIndexes) == 0: return 0
@@ -642,7 +676,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     def OnAddPayment(self):
         if not self.isDoctorSelected():
-            d("Unable to complete operation: please select doctor first.")
+            toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
         sCurrentDate = QtCore.QDate.currentDate().toString(APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
         newDentalPayment = DentalPayment(sCurrentDate)
         self.TableModelPayments.addDentalPayment(self.ActiveClientID, newDentalPayment)
@@ -651,7 +685,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
     def OnRemovePayment(self):
         if not self.isDoctorSelected():
             toolkit_ShowWarningMessage("Unable to complete operation: please select doctor first.")
-        table_view = self.ui.m_tablepayments
+        table_view = self.ui.m_TableViewPayments
         selectModel = table_view.selectionModel()
         selectedIndexes = selectModel.selectedIndexes()
         if len(selectedIndexes) == 0: return 0
@@ -676,8 +710,8 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
                 sMsg += "I couldn't create a DentalClient from the params given by the opened dialog" 
                 toolkit_ReportUndefinedBehavior(sMsg)
                 return 0
-            dictActsPricesFromSettings = self.appsettings.GetDefaultActs()
-            print "dictActsPricesFromSettings", dictActsPricesFromSettings
+            dictActsPricesFromSettings = self.AppSettings.GetDefaultActs()
+            # print "dictActsPricesFromSettings", dictActsPricesFromSettings
             newDentalClient.SetDoctorPrices(dictActsPricesFromSettings)
             self.TableModelDoctors.AddDoctorToDatabase(newDentalClient)      
         return 0 
@@ -694,25 +728,45 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         """ Visualise/edit database of acts for the selected doctor
             Used with a "doubleClicked" signal fired from QTableView
         """
-        table_view = self.ui.m_tableacts
-        table_model_doctors = self.TableModelDoctors
-        table_model_acts = self.TableModelActs
-        table_model_payments = self.TableModelPayments
         iRow = qIndex.row()
-        self.ActiveClientID = table_model_doctors.getHashIDFromSelectedDoctor(qIndex)
-        table_model_acts.SetModelForDoctorByID(self.ActiveClientID)
-        table_model_payments.SetModelForDoctorByID(self.ActiveClientID)
+        self.ActiveClientID = self.TableModelDoctors.getHashIDFromSelectedDoctor(qIndex)
+        self.UpdateDoctorDetailsByID()
+        return 0
+
+    def UpdateDoctorDetailsByID(self):
         
-        # NOT NECESSARY
-        # self.ui.m_tableacts.setModel(table_model_acts)
-        # self.ui.m_tablepayments.setModel(table_model_payments)
+        # Make the acts of the clients match those in preferences
+        # If not, add only the new acts with their prices
+        sSettingsDefaultPricesDict = self.AppSettings.GetDefaultActs()
+        sDoctorPricesDict = self.ParsedDentalDatabase.GetDoctorPricesByDoctorID(self.ActiveClientID)
+        lAdded, lRemoved, lDiffs = toolkit_compare_dicts(sDoctorPricesDict, sSettingsDefaultPricesDict)
+        
+        # Doctor has more acts than settings, they should be removed
+        for sTypeKey in lAdded: del sDoctorPricesDict[sTypeKey]
+        # Doctor has less acts than settings, they should be added
+        for sTypeKey in lRemoved: sDoctorPricesDict[sTypeKey] = sSettingsDefaultPricesDict[sTypeKey]
+
+        # Cast changes to database
+        self.ParsedDentalDatabase.SetDoctorPricesByDoctorID(self.ActiveClientID, sDoctorPricesDict)
+
+        # Now doctor has all the Act Types as in settings, so we should update the delegate
+        self.qDelegateAct.setActTypesStringList(sDoctorPricesDict.keys())
+
+        # Visualise the doctor prices dict
+        tableWidget = self.ui.m_TableWidgetPrices
+        tableWidget.setEnabled(1)
+        toolkit_populate_table_from_dict(tableWidget, sDoctorPricesDict, QtCore.Qt.ItemIsEnabled)
+        
+        # Refresh table AFTER doctor prices dict has been updated
+        self.TableModelActs.SetModelForDoctorByID(self.ActiveClientID)
+        self.TableModelPayments.SetModelForDoctorByID(self.ActiveClientID)
 
         if BOOLSETTING_Initialize_Columnsize_On_Client_Activation:
-            self.InitializeHorizontalHeaderSize(self.ui.m_tableacts)
-            self.InitializeHorizontalHeaderSize(self.ui.m_tablepayments)
+            self.InitializeHorizontalHeaderSize(self.ui.m_TableViewActs)
+            self.InitializeHorizontalHeaderSize(self.ui.m_TableViewPayments)
         else:
-            self.ui.m_tableacts.resizeColumnsToContents()
-            self.ui.m_tablepayments.resizeColumnsToContents()
+            self.ui.m_TableViewActs.resizeColumnsToContents()
+            self.ui.m_TableViewPayments.resizeColumnsToContents()
 
         # Update totals for newly selected doctor
         self.SumAndWriteActs()
@@ -722,7 +776,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     def InitializeHorizontalHeaderSize(self, table_view):
         iWIDTH = table_view.width()
-        if table_view is self.ui.m_tableacts:
+        if table_view is self.ui.m_TableViewActs:
             table_view.setColumnWidth(COL_ACTDATE,          iWIDTH*ACT_TABLE_COLUMNSIZE_DATE)
             table_view.setColumnWidth(COL_ACTTYPE,          iWIDTH*ACT_TABLE_COLUMNSIZE_TYPE)
             table_view.setColumnWidth(COL_ACTPATIENT,       iWIDTH*ACT_TABLE_COLUMNSIZE_PATIENT)
@@ -731,7 +785,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             table_view.setColumnWidth(COL_ACTQTY,           iWIDTH*ACT_TABLE_COLUMNSIZE_QTY)
             table_view.setColumnWidth(COL_ACTSUBTOTAL,      iWIDTH*ACT_TABLE_COLUMNSIZE_TOTAL)
             
-        elif table_view is self.ui.m_tablepayments:
+        elif table_view is self.ui.m_TableViewPayments:
             table_view.setColumnWidth(COL_PAYMENTDATE,      iWIDTH*PAYMENT_TABLE_COLUMNSIZE_DATE)
             table_view.setColumnWidth(COL_PAYMENTSUM,       iWIDTH*PAYMENT_TABLE_COLUMNSIZE_SUM)
 
