@@ -36,14 +36,12 @@ this modified database ... ??
 
 
  ### ***********  OPTIONS  ***********
-verbose = False
+verbose = False 
 # =======================================================================
+
 
 class GeneralSettings(QtGui.QMainWindow):
     """ Openv window containing all the acts for a given client """
-
-    DefaultPricesChanged = QtCore.Signal()
-
     def __init__(self, parent=None):
     	super(GeneralSettings, self).__init__(parent)
 
@@ -83,6 +81,8 @@ class GeneralSettings(QtGui.QMainWindow):
         self.LastInvoiceNo = -1
 
         self.InitSettings()
+
+        self.MySignal = PriceChangeClass()
 
     # ********************************************************************************
     def WriteSettings(self):
@@ -289,7 +289,7 @@ class GeneralSettings(QtGui.QMainWindow):
             sPrice = table.item(iRow, 1).text()
             self.DefaultActs[sName.upper()] = float(sPrice)
 
-        self.DefaultPricesChanged.emit()
+        self.MySignal.PricesChanged.emit()
         
         return 0
 
@@ -463,11 +463,14 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_OpenInvoiceFolder.setStyleSheet("Text-align:left")
         self.ui.PB_Calculator.setStyleSheet("Text-align:left")
         self.ui.PB_Settings.setStyleSheet("Text-align:left")
+        self.ui.PB_ToggleInvoiceViewer.setStyleSheet("Text-align:left")
+        self.ui.PB_Reporting.setStyleSheet("Text-align:left")
         self.ui.LE_TotalActs.setStyleSheet("color: rgb(0, 0, 240)")
         self.ui.LE_TotalPayments.setStyleSheet("color: rgb(0, 0, 240)")
         return 0
 
     def InitSlots(self):
+        self.ui.PB_Reporting.clicked.connect(self.OnReporting)
         self.ui.PB_OpenInvoiceFolder.clicked.connect(self.OnOpenInvoiceFolder)
         self.ui.PB_ExportInvoice.clicked.connect(self.OnExportInvoice)
         self.ui.PB_Calculator.clicked.connect(self.OnSpawnCalculator)
@@ -482,12 +485,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_ToggleInvoiceViewer.clicked.connect(self.OnShowHideInvoiceViewer)
         self.ui.m_TableViewClients.clicked.connect(self.OnActivateClient)
 
-        self.AppSettings.DefaultPricesChanged.connect(self.OnPricesChanged)
-        self.TableModelActs.DoctorPricesChanged.connect(self.OnPricesChanged)
+        self.AppSettings.MySignal.PricesChanged.connect(self.OnPricesChanged)
+        self.TableModelActs.MySignal.PricesChanged.connect(self.OnPricesChanged)
 
 
     @QtCore.Slot()
-    def OnPricesChanged():
+    def OnPricesChanged(self):
        if self.ActiveClientID is not None:
         self.UpdateDoctorDetailsByID()
 
@@ -527,16 +530,24 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         bUTD2 = self.TableModelActs.IsUpToDate()
         bUTD3 = self.TableModelPayments.IsUpToDate()
         bExitWithoutSave = bUTD1 and bUTD2 and bUTD3
-        if(not bExitWithoutSave):
-            sDatabasePath = self.AppSettings.GetPath_DoctorActsDatabase()
-            pkl_save(self.ParsedDentalDatabase, sDatabasePath)
-        self.AppSettings.WriteSettings() # re-write settings.ini
-
-        if not BOOLSETTING_Confirm_before_exit_application:
+        if(bExitWithoutSave): 
+            self.close()
             return 0
-        reply = toolkit_ShowWarningMessage2("Are you sure you want to\nquit Dental Client Base ?")
-        if reply == QMessageBox.Ok: 
-        	self.close()
+
+        if BOOLSETTING_Confirm_before_exit_application:
+            sMsg = "You are about to quit Dental Client Base. "
+            sMsg += "Do you want to SAVE your progress or IGNORE any changes before quitting ?" 
+            reply = toolkit_ShowWarningMessage3(sMsg)
+            if reply == QMessageBox.Cancel: 
+                return 0
+            if reply == QMessageBox.Ignore: 
+                self.close()                
+                return 0
+
+        sDatabasePath = self.AppSettings.GetPath_DoctorActsDatabase()
+        pkl_save(self.ParsedDentalDatabase, sDatabasePath)
+        self.AppSettings.WriteSettings() # re-write settings.ini
+        self.close()
         return 0
 
     def OnOpenSettings(self):
@@ -552,6 +563,27 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     def OnSpawnCalculator(self):
         subprocess.call("calc.exe")
+        return 0
+
+    def OnReporting(self):
+        self.ReportingDiag = QtGui.QDialog(self)
+        reportingWidg = self.ReportingDiag        
+        reportingWidg.setWindowTitle("My Form")
+        layout = QtGui.QVBoxLayout(reportingWidg)
+        qTextEdit = QtGui.QTextEdit("Write your message here..", reportingWidg)
+        PB_Ok = QtGui.QPushButton("Send", reportingWidg)
+        PB_Cancel = QtGui.QPushButton("Cancel", reportingWidg)
+        PB_Ok.clicked.connect(reportingWidg.accept)
+        PB_Cancel.clicked.connect(reportingWidg.reject)
+        layout.addWidget(qTextEdit)
+        layout.addWidget(PB_Ok)
+        layout.addWidget(PB_Cancel)
+        # Set dialog layout
+        reportingWidg.setLayout(layout)
+
+        if self.ReportingDiag.exec_() == QtGui.QDialog.Accepted:
+            sMsg = qTextEdit.toPlainText()
+            toolkit_ErrorReport(sMsg)
         return 0
 
     def OnOpenInvoiceFolder(self):
@@ -711,7 +743,6 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
                 toolkit_ReportUndefinedBehavior(sMsg)
                 return 0
             dictActsPricesFromSettings = self.AppSettings.GetDefaultActs()
-            # print "dictActsPricesFromSettings", dictActsPricesFromSettings
             newDentalClient.SetDoctorPrices(dictActsPricesFromSettings)
             self.TableModelDoctors.AddDoctorToDatabase(newDentalClient)      
         return 0 

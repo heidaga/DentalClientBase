@@ -7,6 +7,11 @@
 # DentalClientBase Changelog
 *****************************
 
+* v0.11.1.1:
+- signals emitted when prices get changed bug fix
+- add reporting feature (direct via email)
+- improved closing application with Save/Ignore/Cancel
+
 * v0.11.0.0:
 - Major change: compare doctor prices with settings
   and handle differences in acts

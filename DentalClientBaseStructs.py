@@ -330,7 +330,6 @@ class DentalDatabase:
 								 dentalClientInstance.Email,
 								 dentalClientInstance.Address)
 		newdoctor.SetDoctorPrices(dentalClientInstance.GetDoctorPrices())
-		print "dentalClientInstance.GetDoctorPrices()", dentalClientInstance.GetDoctorPrices()
 		newdoctor_id = newdoctor.id()
 		if newdoctor_id in self.ClientsMap:
 			print "Doctor is exists already in the database"
@@ -424,37 +423,7 @@ if __name__ == '__main__':
 		pkl_save(defaultprices, DB_DEFAULTPRICES)
 		return 0
 
-	# def test2():
-	# 	DB_CLIENTS_AND_ACTS = "res/Database2017.dat"
-		
-	# 	MyDatabase = DentalDatabase()
-		
-	# 	id1 = MyDatabase.AddDoctorByDetails("Samir", "Kassir", "03789366")
-	# 	id2 = MyDatabase.AddDoctorByDetails("Khalil", "Gebran", "71555444")
-	# 	id3 = MyDatabase.AddDoctorByDetails("Alaa", "Zalzali", "70885146")
-		 
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id1, "05/02/2015", "Sahar K.", "CERAMIC", 2, 10)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/03/2015", "Ali M.","FULL-DENTURE", 10, 6.5)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id1, "25/01/2017", "Sahar K.","CCM", 10, 6.5)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id1, "30/01/2017", "Sahar K.","FULL-DENTURE", 10, 6.5)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id2, "01/01/2016", "Rabih A.", "CERAMIC", 1, 12)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "08/12/2016", "Lilia K.", "FULL-DENTURE", 4, 37)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "20/01/2017", "Tanjara S.", "CERAMIC", 1, 50)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Esaaf R.", "CCM", 6, 10)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "22/12/2016", "Elham U.", "FM", 6, 10)
-	# 	MyDatabase.AppendActByDetailsToDoctorByID(id3, "28/01/2017", "Samar K.", "FULL-DENTURE", 6, 10)
-
-	# 	pkl_save(MyDatabase  , DB_CLIENTS_AND_ACTS)
-
-	# 	ParsedDatabase =  pickle.load( open( DB_CLIENTS_AND_ACTS , "rb" ) )
-	# 	print "len(ParsedDatabase)", len(ParsedDatabase)
-	# 	print "Nb parsed doctors", ParsedDatabase.GetNbDoctors()
-
-	# 	list_doctors = ParsedDatabase.GetListDoctors()
-	# 	for doctor in list_doctors:
-	# 		print "Dr.", doctor.GetFullName()
-
-	def test2bis():
+	def test2():
 		DB_CLIENTS_AND_ACTS = "res/Database2017.dat"
 		
 		defaultprices = dict()
@@ -501,7 +470,6 @@ if __name__ == '__main__':
 			print "Doctor name", doctor.GetFullName()
 
 	test()
-	# test2()
-	test2bis()
+	test2()
 
 	

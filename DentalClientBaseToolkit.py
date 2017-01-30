@@ -18,6 +18,7 @@ import operator
 import hashlib
 import sys
 import webbrowser
+import urllib
 from urllib import quote
 
 # Non open to user modification
@@ -127,6 +128,17 @@ def toolkit_ShowWarningMessage2(msg):
     msgBox.setIconPixmap(QtGui.QPixmap('res/information.png').scaled(res,res))
     return msgBox.exec_()
 
+def toolkit_ShowWarningMessage3(msg):
+    msgBox = QMessageBox()
+    msgBox.setText("Warning")
+    msgBox.setInformativeText(msg)
+    msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Ignore | QMessageBox.Cancel)
+    msgBox.setDefaultButton(QMessageBox.Save)
+    # msgBox.setIcon(QMessageBox.Warning)
+    res = APP_SETTINGS_SCALED_ICONS_RESOLUTION
+    msgBox.setIconPixmap(QtGui.QPixmap('res/information.png').scaled(res,res))
+    return msgBox.exec_()
+
 def toolkit_ShowCriticalMessage(msg):
     msgBox = QMessageBox()
     msgBox.setText("Critical")
@@ -181,6 +193,9 @@ def toolkit_compare_dicts(d1, d2):
     same = set(o for o in intersect_keys if d1[o] == d2[o])
     return added, removed, modified #, same
 
+class PriceChangeClass(QtCore.QObject):    
+    PricesChanged = QtCore.Signal()
+
 ##################################################################
 ############### MODEL AND DELEGATES ##############################
 ##################################################################
@@ -198,7 +213,6 @@ class DoctorTableView(QtGui.QTableView):
     #     qIndex = selectedIndexes[0]
     #     if not qIndex.isValid(): return 0
     #     selectionModel.select(qIndex, QtGui.QItemSelectionModel.Deselect)
-
 
 class ActTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
@@ -270,7 +284,6 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
         return sVal.upper()
 
     def FormatPhoneNumber(self, sVal):
-        # print "FormatPhoneNumber :", sVal
         # if len(sVal) != 8 : return "UNDEFINED"
         if APP_SETTINGS_PHONE_FORMAT == APP_SETTINGS_PHONE_OPTION1:
             return APP_SETTINGS_PHONE_OPTION1.format(sVal[0:2],sVal[2:5],sVal[5:8])
@@ -355,9 +368,6 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
         self.bUpToDate = False
 ###################################################################################
 class ActTableModel(QtCore.QAbstractTableModel):
-
-    DoctorPricesChanged = QtCore.Signal()
-
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
 
@@ -368,13 +378,14 @@ class ActTableModel(QtCore.QAbstractTableModel):
         self.header = ACTS_HEADER_DICT.values()
         self.DoctorPrices = None
 
+        self.MySignal = PriceChangeClass()
+
     def SetModelForDoctorByID(self, iDoctorID):
         """ table view using this model shoud use SetModel 
         after a call to this function """
         self.beginResetModel()
         self.doctorID = iDoctorID
         self.DoctorPrices = self.database.GetDoctorPricesByDoctorID(iDoctorID)
-        # print self.DoctorPrices
         self.mylist = self.database.GetListActsByDoctorID(iDoctorID)
         self.endResetModel()
         return
@@ -479,7 +490,10 @@ class ActTableModel(QtCore.QAbstractTableModel):
                 dentalAct.SetVarDate(value)
 
             elif iCol == COL_ACTTYPE:
-                if self.DoctorPrices is None: return False
+                if value not in self.DoctorPrices:
+                    sMsg = "The act type ({0}) is not supported.".format(value)
+                    toolkit_ShowWarningMessage(sMsg)
+                    return False
                 dentalAct.SetVarType(value, self.DoctorPrices[value])
 
             elif iCol == COL_ACTNOTES:
@@ -488,6 +502,14 @@ class ActTableModel(QtCore.QAbstractTableModel):
             elif iCol == COL_ACTUNITPRICE:
                 sType = dentalAct.__getitem__(COL_ACTTYPE)
                 # change doctor prices 
+                if sType not in self.DoctorPrices:
+                    sMsg = "The act type ({0}) is no longer supported, ".format(sType)
+                    sMsg += "because you have probably deleted the corresponding "
+                    sMsg += "act type from the application's Preferences. "
+                    sMsg += "Therefore its unit price is locked. It can only be "
+                    sMsg += "changed if you declare the act again in the Preferences."
+                    toolkit_ShowWarningMessage(sMsg)
+                    return False
                 self.DoctorPrices[sType] = float(value)
                 dentalAct.SetVarUnitPrice(value)
                 bDictPricesChanged = True
@@ -506,7 +528,7 @@ class ActTableModel(QtCore.QAbstractTableModel):
 
             if bDictPricesChanged:
                 self.database.SetDoctorPricesByDoctorID(self.doctorID, self.DoctorPrices)
-                self.DoctorPricesChanged.emit()
+                self.MySignal.PricesChanged.emit()
             
             self.dataChanged.emit(index, index)
             return True
