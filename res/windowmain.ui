@@ -112,7 +112,7 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <property name="iconSize">
           <size>
@@ -147,7 +147,7 @@
              </property>
              <property name="url">
               <url>
-               <string>https://www.facebook.com/</string>
+               <string>http://www.google.fr/?gfe_rd=cr&amp;ei=RSCRWJKTG4-xtgfJqofwAg</string>
               </url>
              </property>
              <property name="zoomFactor">
@@ -162,7 +162,7 @@
          </widget>
          <widget class="QWidget" name="tab_2">
           <attribute name="title">
-           <string>Invoice #XXX</string>
+           <string>Invoice #</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_9">
            <item row="0" column="0">
@@ -203,8 +203,15 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>500</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="font">
          <font>
+          <pointsize>10</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
@@ -248,8 +255,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>24</width>
+             <height>24</height>
             </size>
            </property>
            <property name="flat">
@@ -289,8 +296,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>24</width>
+             <height>24</height>
             </size>
            </property>
            <property name="flat">
@@ -330,8 +337,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>24</width>
+             <height>24</height>
             </size>
            </property>
            <property name="flat">
@@ -360,7 +367,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:400;&quot;&gt;Export invoice for a highlighted doctor in the doctors database&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Export and View Invoice</string>
+            <string>Export Invoice</string>
            </property>
            <property name="icon">
             <iconset resource="../mainwindow.qrc">
@@ -368,8 +375,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>24</width>
+             <height>24</height>
             </size>
            </property>
            <property name="flat">
@@ -409,8 +416,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>24</width>
+             <height>24</height>
             </size>
            </property>
            <property name="flat">
@@ -450,8 +457,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>16</width>
-             <height>16</height>
+             <width>24</width>
+             <height>24</height>
             </size>
            </property>
            <property name="flat">
@@ -516,15 +523,16 @@
         </property>
         <property name="font">
          <font>
+          <pointsize>10</pointsize>
           <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
         <property name="title">
-         <string>Summary</string>
+         <string>Summary of selected doctor</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
         <layout class="QGridLayout" name="gridLayout_10">
          <item row="1" column="1">
@@ -633,7 +641,7 @@
        <widget class="QGroupBox" name="groupBox_2">
         <property name="maximumSize">
          <size>
-          <width>400</width>
+          <width>350</width>
           <height>16777215</height>
          </size>
         </property>

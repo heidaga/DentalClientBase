@@ -212,9 +212,6 @@ class GeneralSettings(QtGui.QMainWindow):
         if event.key() == QtCore.Qt.Key_Escape:
             self.OnClose()
 
-    # def focusOutEvent(self, event):
-    #     self.setFocus(QtCore.Qt.StrongFocus)
-
     def GetLastInvoiceNo(self):
         return self.LastInvoiceNo
 
@@ -467,6 +464,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_Reporting.setStyleSheet("Text-align:left")
         self.ui.LE_TotalActs.setStyleSheet("color: rgb(0, 0, 240)")
         self.ui.LE_TotalPayments.setStyleSheet("color: rgb(0, 0, 240)")
+
+        # self.InitializeHorizontalHeaderSize(self.ui.m_TableViewClients)
+        self.ui.m_TableViewClients.resizeColumnsToContents()
         return 0
 
     def InitSlots(self):
@@ -487,6 +487,31 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
         self.AppSettings.MySignal.PricesChanged.connect(self.OnPricesChanged)
         self.TableModelActs.MySignal.PricesChanged.connect(self.OnPricesChanged)
+
+        self.ShortcutDelDoctor = QtGui.QShortcut(self)
+        self.ShortcutDelDoctor.setKey(QtCore.Qt.CTRL + QtCore.Qt.Key_Delete)
+        self.ShortcutDelDoctor.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.ShortcutDelDoctor.activated.connect(self.OnRemoveDoctor)
+
+        self.ShortcutAddAct = QtGui.QShortcut(self)
+        self.ShortcutAddAct.setKey(QtCore.Qt.CTRL + QtCore.Qt.Key_A)
+        self.ShortcutAddAct.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.ShortcutAddAct.activated.connect(self.OnAddAct)
+
+        self.ShortcutAddAct = QtGui.QShortcut(self)
+        self.ShortcutAddAct.setKey(QtCore.Qt.CTRL + QtCore.Qt.Key_D)
+        self.ShortcutAddAct.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.ShortcutAddAct.activated.connect(self.OnRemoveAct)
+
+        self.ShortcutAddAct = QtGui.QShortcut(self)
+        self.ShortcutAddAct.setKey(QtCore.Qt.CTRL + QtCore.Qt.Key_P)
+        self.ShortcutAddAct.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.ShortcutAddAct.activated.connect(self.OnAddPayment)
+
+        self.ShortcutAddAct = QtGui.QShortcut(self)
+        self.ShortcutAddAct.setKey(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
+        self.ShortcutAddAct.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.ShortcutAddAct.activated.connect(self.OnRemovePayment)
 
 
     @QtCore.Slot()
@@ -510,6 +535,33 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     ###### Member functions related to Qt
 
+    def closeEvent(self, event):
+        """ I had to use the prefix GtGui.QMessage and return make it work """
+        bUTD1 = self.TableModelDoctors.IsUpToDate() 
+        bUTD2 = self.TableModelActs.IsUpToDate()
+        bUTD3 = self.TableModelPayments.IsUpToDate()
+        bExitWithoutSave = bUTD1 and bUTD2 and bUTD3
+        if(bExitWithoutSave): 
+            event.accept()
+            return
+
+        if BOOLSETTING_Confirm_before_exit_application:
+            sMsg = "You are about to quit Dental Client Base. "
+            sMsg += "Do you want to SAVE your progress or IGNORE any changes before quitting ?" 
+            reply = toolkit_ShowWarningMessage3(sMsg)
+            if reply == QtGui.QMessageBox.Cancel: 
+                event.ignore()
+                return
+            if reply == QtGui.QMessageBox.Ignore: 
+                event.accept()
+                return
+
+        sDatabasePath = self.AppSettings.GetPath_DoctorActsDatabase()
+        pkl_save(self.ParsedDentalDatabase, sDatabasePath)
+        self.AppSettings.WriteSettings() # re-write settings.ini
+        event.accept()
+        return
+
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
             self.OnClose()
@@ -526,27 +578,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         else: return 0
 
     def OnClose(self):
-        bUTD1 = self.TableModelDoctors.IsUpToDate() 
-        bUTD2 = self.TableModelActs.IsUpToDate()
-        bUTD3 = self.TableModelPayments.IsUpToDate()
-        bExitWithoutSave = bUTD1 and bUTD2 and bUTD3
-        if(bExitWithoutSave): 
-            self.close()
-            return 0
-
-        if BOOLSETTING_Confirm_before_exit_application:
-            sMsg = "You are about to quit Dental Client Base. "
-            sMsg += "Do you want to SAVE your progress or IGNORE any changes before quitting ?" 
-            reply = toolkit_ShowWarningMessage3(sMsg)
-            if reply == QMessageBox.Cancel: 
-                return 0
-            if reply == QMessageBox.Ignore: 
-                self.close()                
-                return 0
-
-        sDatabasePath = self.AppSettings.GetPath_DoctorActsDatabase()
-        pkl_save(self.ParsedDentalDatabase, sDatabasePath)
-        self.AppSettings.WriteSettings() # re-write settings.ini
+        """ handled by close event """
         self.close()
         return 0
 
@@ -699,8 +731,10 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         qIndex = selectedIndexes[0]
         if not qIndex.isValid(): return 0
         iRowToDel = selectedIndexes[0].row()
-        reply = toolkit_ShowDeleteMessage("Are you sure you want to\ndelete the selected ACT ?")
-        if reply != QMessageBox.Ok: return 0
+        if self.sender() == self.ui.PB_RemoveAct:
+            if BOOLSETTING_Confirm_before_delete_act_via_remove_button:
+                reply = toolkit_ShowDeleteMessage("Are you sure you want to\ndelete the selected ACT ?")
+                if reply != QMessageBox.Ok: return 0
         self.TableModelActs.removeDentalAct(self.ActiveClientID, iRowToDel)
         return 0 
 
@@ -724,10 +758,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         qIndex = selectedIndexes[0]
         if not qIndex.isValid(): return 0
         iRowToDel = selectedIndexes[0].row()
-        reply = toolkit_ShowDeleteMessage("Are you sure you want to\ndelete the selected PAYMENT ?")
-        if reply != QMessageBox.Ok: return 0 
+        if self.sender() == self.ui.PB_RemovePayment:
+            if BOOLSETTING_Confirm_before_delete_payment_via_remove_button:
+                reply = toolkit_ShowDeleteMessage("Are you sure you want to\ndelete the selected PAYMENT ?")
+                if reply != QMessageBox.Ok: return 0 
         self.TableModelPayments.removeDentalPayment(self.ActiveClientID, iRowToDel)
-        # toolkit_ShowWarningMessage("ROU2 YA KHARA BA3ED MA 5ALASTA HAY :) :)")
         return 0 
 
     # **********  TABLE CLIENTS EVENTS ***********************
@@ -748,9 +783,11 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         return 0 
 
     def OnRemoveDoctor(self):
-        sMsg = "Are you sure to delete a doctor entry and all related dental acts ?"
-        ret = toolkit_ShowDeleteMessage(sMsg)
-        if ret == QMessageBox.Cancel: return 0
+        if self.sender() == self.ui.PB_RemoveDoctor:
+            if BOOLSETTING_Confirm_before_delete_doctor_via_remove_button:
+                sMsg = "Are you sure to delete a doctor entry and all related dental acts ?"
+                ret = toolkit_ShowDeleteMessage(sMsg)
+                if ret == QMessageBox.Cancel: return 0
         if self.ActiveClientID is None: return 0
         self.TableModelDoctors.RemoveDoctorFromDatabase(self.ActiveClientID)
         return 0 
@@ -807,6 +844,12 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
 
     def InitializeHorizontalHeaderSize(self, table_view):
         iWIDTH = table_view.width()
+
+        if table_view is self.ui.m_TableViewClients:
+            table_view.setColumnWidth(COL_DRFIRSTNAME,      iWIDTH*DOCTOR_TABLE_COLUMNSIZE_FIRSTNAME)
+            table_view.setColumnWidth(COL_DRLASTNAME,       iWIDTH*DOCTOR_TABLE_COLUMNSIZE_LASTNAME)
+            table_view.setColumnWidth(COL_DRPHONE,          iWIDTH*DOCTOR_TABLE_COLUMNSIZE_PHONE)
+
         if table_view is self.ui.m_TableViewActs:
             table_view.setColumnWidth(COL_ACTDATE,          iWIDTH*ACT_TABLE_COLUMNSIZE_DATE)
             table_view.setColumnWidth(COL_ACTTYPE,          iWIDTH*ACT_TABLE_COLUMNSIZE_TYPE)

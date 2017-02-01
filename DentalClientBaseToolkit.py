@@ -256,14 +256,12 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
             return len(self.mylist[0])
     
     def data(self, index, role = QtCore.Qt.DisplayRole):
+        if not index.isValid(): return None
         iRow = index.row()
         iCol = index.column()
         dentalDoctor = self.mylist[iRow]
-        
-        if not index.isValid(): 
-            return None
-        
-        elif role == HASH_ROLE:
+
+        if role == HASH_ROLE:
             return dentalDoctor.__getitem__(iCol)
             
         elif role == QtCore.Qt.DisplayRole:
@@ -404,15 +402,13 @@ class ActTableModel(QtCore.QAbstractTableModel):
             return len(self.mylist[0])
     
     def data(self, index, role = QtCore.Qt.DisplayRole):
+        if not index.isValid(): return None
         iRow = index.row()
         iCol = index.column()
         dentalActAtRow = self.mylist[iRow]
-        
-        if not index.isValid(): 
-            return None
 
         # BackgroundRole
-        elif role == QtCore.Qt.FontRole:
+        if role == QtCore.Qt.FontRole:
             if iCol in [COL_ACTUNITPRICE, COL_ACTQTY, COL_ACTSUBTOTAL]:
                 return ACT_TABLE_FONT_FLOATS
             elif iCol == COL_ACTTYPE:
@@ -541,19 +537,21 @@ class ActTableModel(QtCore.QAbstractTableModel):
             return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable  
 
     def addDentalAct(self, iDoctorID, dentalActInstance):
+        self.beginResetModel()
         count = self.database.GetNbActsByDoctorID(iDoctorID)
         self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
         self.database.AppendActByInstanceToDoctorByID(iDoctorID, dentalActInstance)
         self.endInsertRows()
-        self.layoutChanged.emit()
+        self.endResetModel()
         self.bUpToDate = False
 
     def removeDentalAct(self, iDoctorID, iRowIndex):
+        self.beginResetModel()
         count = self.database.GetNbActsByDoctorID(iDoctorID)
         self.beginRemoveRows(QtCore.QModelIndex(), count, count-1)
         self.database.RemoveActByIndexByDoctorID(iDoctorID, iRowIndex)
         self.endRemoveRows()
-        self.layoutChanged.emit()
+        self.endResetModel()
         self.bUpToDate = False
 ####################################################################################
 class PaymentTableModel(QtCore.QAbstractTableModel):
@@ -592,15 +590,13 @@ class PaymentTableModel(QtCore.QAbstractTableModel):
             return len(self.mylist[0])
     
     def data(self, index, role = QtCore.Qt.DisplayRole):
+        if not index.isValid(): return None
         iRow = index.row()
         iCol = index.column()
         dentalPaymentAtRow = self.mylist[iRow]
-        
-        if not index.isValid(): 
-            return None
 
         # BackgroundRole
-        elif role == QtCore.Qt.FontRole:
+        if role == QtCore.Qt.FontRole:
             if iCol == COL_PAYMENTSUM:
                 return ACT_TABLE_FONT_FLOATS
             elif iCol == COL_PAYMENTDATE:
@@ -668,19 +664,21 @@ class PaymentTableModel(QtCore.QAbstractTableModel):
             return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable  
 
     def addDentalPayment(self, iDoctorID, dentalPaymentInstance):
+        self.beginResetModel()
         count = self.database.GetNbActsByDoctorID(iDoctorID)
         self.beginInsertRows(QtCore.QModelIndex(), count, count+1)
         self.database.AppendPaymentByInstanceToDoctorByID(iDoctorID, dentalPaymentInstance)
         self.endInsertRows()
-        self.layoutChanged.emit()
+        self.endResetModel()
         self.bUpToDate = False
 
     def removeDentalPayment(self, iDoctorID, iRowIndex):
+        self.beginResetModel()
         count = self.database.GetNbActsByDoctorID(iDoctorID)
         self.beginRemoveRows(QtCore.QModelIndex(), count, count-1)
         self.database.RemovePaymentByIndexByDoctorID(iDoctorID, iRowIndex)
         self.endRemoveRows()
-        self.layoutChanged.emit()
+        self.endResetModel()
         self.bUpToDate = False
 ####################################################################################
 class DentalPaymentDelegate(QtGui.QStyledItemDelegate):

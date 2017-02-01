@@ -1,11 +1,17 @@
-# DentalClientBase To-Do list
-*****************************
-* Add settings/switches to Settings window
-* Reset Invoice counter
-* Implement number validation rules in all tables (to refuse negatives, alphanumerics ...)
-
 # DentalClientBase Changelog
 *****************************
+
+* v0.11.2.2:
+- Improvement: shortcut to delete doctor (wihout confirmation) CTRL+Del_key
+- Improvement: shortcut to create act CTRL+A
+- Improvement: shortcut to delete act (wihout confirmation) CTRL+D
+- Improvement: shortcut to create payment CTRL+P
+- Improvement: shortcut to delete payment (wihout confirmation) CTRL+R
+- Bug fix attempt: no need to re select another doctor to refresh table
+- Bug fix: close application bug fix (reimplement via event handling)
+- Bug fix: delete via shortcut causes invalid index (fixed model data function)
+- Bug fix: doctor table regular column spacing
+- Re enable open HTML invoice after exporting
 
 * v0.11.1.1:
 - signals emitted when prices get changed bug fix
@@ -75,3 +81,10 @@
 - Added payments table (still inactive)
 - bug fix: export not found, automatic creation
 - canceled import weasyprint: py2exe bug 
+
+
+# DentalClientBase To-Do list
+*****************************
+* Add settings/switches to Settings window
+* Reset Invoice counter
+* Implement number validation rules in all tables (to refuse negatives, alphanumerics ...)
