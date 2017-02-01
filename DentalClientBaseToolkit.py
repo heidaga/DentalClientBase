@@ -487,8 +487,9 @@ class ActTableModel(QtCore.QAbstractTableModel):
 
             elif iCol == COL_ACTTYPE:
                 if value not in self.DoctorPrices:
-                    sMsg = "The act type ({0}) is not supported.".format(value)
-                    toolkit_ShowWarningMessage(sMsg)
+                    if value != "":
+                        sMsg = "The act type ({0}) is not supported.".format(value)
+                        toolkit_ShowWarningMessage(sMsg)
                     return False
                 dentalAct.SetVarType(value, self.DoctorPrices[value])
 
@@ -499,11 +500,16 @@ class ActTableModel(QtCore.QAbstractTableModel):
                 sType = dentalAct.__getitem__(COL_ACTTYPE)
                 # change doctor prices 
                 if sType not in self.DoctorPrices:
-                    sMsg = "The act type ({0}) is no longer supported, ".format(sType)
-                    sMsg += "because you have probably deleted the corresponding "
-                    sMsg += "act type from the application's Preferences. "
-                    sMsg += "Therefore its unit price is locked. It can only be "
-                    sMsg += "changed if you declare the act again in the Preferences."
+                    sMsg = str()
+                    if value == "" or value == str(float(0.0)):
+                        sMsg = "The unit price of this act cannot be changed because act type is empty. \n"
+                        sMsg += "Select an act type from the combo list of available act types."
+                    else:
+                        sMsg = "The act type ({0}) is no longer supported, ".format(sType)
+                        sMsg += "because you have probably deleted the corresponding "
+                        sMsg += "act type from the application's Preferences. "
+                        sMsg += "Therefore its unit price is locked. It can only be "
+                        sMsg += "changed if you declare the act again in the Preferences."
                     toolkit_ShowWarningMessage(sMsg)
                     return False
                 self.DoctorPrices[sType] = float(value)

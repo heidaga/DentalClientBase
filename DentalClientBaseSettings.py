@@ -4,7 +4,7 @@ import os
 # GENERAL SETTINGS
 #########################
 # VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       11       .           2         .         2      '
+__version__ =  '      0       .       11       .           3         .         2      '
 
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
@@ -128,7 +128,7 @@ APP_SETTINGS_TABLE_DEFAULTACTS_FONTSIZE = 8
 #########################
 # ICONS
 #########################
-APP_SETTINGS_SCALED_ICONS_RESOLUTION = 100 # pixel
+APP_SETTINGS_SCALED_ICONS_RESOLUTION = 128 # pixel
 
 
 #########################

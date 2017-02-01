@@ -1,6 +1,11 @@
 # DentalClientBase Changelog
 *****************************
 
+* v0.11.3.2:
+- Improvement: no warning if empty act type combo is clicked
+- Improvement: warning if trying to edit unit price while act type combo is empty
+- Slightly increase warning icon resolution
+
 * v0.11.2.2:
 - Improvement: shortcut to delete doctor (wihout confirmation) CTRL+Del_key
 - Improvement: shortcut to create act CTRL+A
