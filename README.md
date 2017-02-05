@@ -1,6 +1,10 @@
 # DentalClientBase Changelog
 *****************************
 
+* v0.11.5.4:
+- Bug fix: allow deleting any selected act in the preferences 
+  default
+
 * v0.11.5.3:
 - Bug fix: when opening invoice, point directly on the 
   client export subfolder. If not possible, point on

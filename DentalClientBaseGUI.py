@@ -66,6 +66,7 @@ class GeneralSettings(QtGui.QMainWindow):
         self.ui.PB_LoadDatabaseDefaultActs.clicked.connect(self.OnDatabaseLoad)
         self.ui.PB_LoadDatabaseDoctors.clicked.connect(self.OnDatabaseLoad)
         self.ui.m_tabledefaultacts.cellChanged.connect(self.OnDefaultsChange)
+        self.ui.m_tabledefaultacts.clicked.connect(self.OnSelectAct)
 
         # Initialize settings GUI
         self.ui.mLE_DatabaseDefaultActs.setText("")
@@ -79,6 +80,7 @@ class GeneralSettings(QtGui.QMainWindow):
         self.DefaultActsDatabasePath = "res/database_defaultprices.dat"
         self.DefaultActs = dict()
         self.LastInvoiceNo = -1
+        self.SelectedActRow = -1
 
         self.InitSettings()
 
@@ -219,6 +221,9 @@ class GeneralSettings(QtGui.QMainWindow):
         self.LastInvoiceNo = iVal
         return 0
 
+    def OnSelectAct(self, qIndex):
+        self.SelectedActRow = qIndex.row()
+
     def OnClose(self):
         if self.bUpToDate:
             self.close()
@@ -244,9 +249,11 @@ class GeneralSettings(QtGui.QMainWindow):
         return 0 
 
     def OnRemoveAct(self):
+        if self.SelectedActRow  < 0: return 0
         table = self.ui.m_tabledefaultacts
         iRow = table.rowCount()
-        table.setRowCount(iRow-1)
+        # table.setRowCount(iRow-1)
+        table.removeRow(self.SelectedActRow)
         self.bUpToDate = False
         return 0 
 
