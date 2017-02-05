@@ -1,6 +1,11 @@
 # DentalClientBase Changelog
 *****************************
 
+* v0.11.5.3:
+- Bug fix: when opening invoice, point directly on the 
+  client export subfolder. If not possible, point on
+  export directory
+
 * v0.11.5.2:
 - Create subfolder for each doctor when exporting invoice
 - Changed order of patient column in table and invoice

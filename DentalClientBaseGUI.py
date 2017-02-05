@@ -623,7 +623,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         sOpenDir = APP_INVOICE_EXPORT_DIR
         if self.ActiveClientID is not None:
             dentalDoctor = self.ParsedDentalDatabase.GetDoctorFromID(self.ActiveClientID)
-            sOpenDir = dentalDoctor.GetExportName()
+            sOpenDir = os.path.join(APP_INVOICE_EXPORT_DIR,dentalDoctor.GetExportName())
+            if not QtCore.QDir(sOpenDir).exists():
+                sOpenDir = APP_INVOICE_EXPORT_DIR
 
         filters = ["HTML Invoice (*.html)", "PDF Invoice (*.pdf)", "Dental Database Invoice (*.html *.pdf)", "Any files (*)"]
         dialog = QtGui.QFileDialog(self, "Open Exported Invoice", directory = sOpenDir)
