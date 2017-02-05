@@ -183,6 +183,11 @@ class DentalClient:
 	def GetFullName(self):
 		return "Dr. {0} {1}".format(self.Firstname, self.Lastname)
 
+	def GetExportName(self):
+		sName = self.GetFullName()
+		sNameNoSpace = sName.replace(" ", "_")
+		return sNameNoSpace
+
 	def SetVarFirstname(self, sVal):
 		self.Firstname = str(sVal)
 

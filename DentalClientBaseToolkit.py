@@ -12,14 +12,15 @@ from PySide.QtGui import QMessageBox
 from PySide.QtGui import QColor
 # from PySide.QtCore import qDebug
 from enum import Enum
-from DentalClientBaseSettings import *
 import operator
-
 import hashlib
+import base64
 import sys
 import webbrowser
 import urllib
 from urllib import quote
+
+from DentalClientBaseSettings import *
 
 # Non open to user modification
 APP_SETTINGS_ACTDATE_FORMAT_DATABASE = "dd/MM/yyyy"
@@ -70,6 +71,14 @@ def HashClientID(sFirstname, sLastName, sPhone):
     # if self.PatientName="": return None
     # return sha1(self.Date+self.Type+str(self.UnitPrice)+str(self.Qty)
 
+
+def toolkit_EncodeLogo():
+    # newhash = hashlib.md5(open(full_path, 'rb').read()).hexdigest()
+    # if newhash is not APP_LOGO_MD5:
+        # APP_LOGO_MD5 = newhash
+    sEncodedLogo = base64.b64encode(open(APP_BANNER_PATH, "rb").read())
+    sEncodedLogo = "data:image/png;base64," + sEncodedLogo
+    return sEncodedLogo
 
 # ***********************************************************************
 # ***********************************************************************

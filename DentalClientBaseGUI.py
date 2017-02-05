@@ -619,22 +619,27 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         return 0
 
     def OnOpenInvoiceFolder(self):
-        # print ">>> APP_INVOICE_EXPORT_DIR:" , APP_INVOICE_EXPORT_DIR
-        # subprocess.Popen(r'explorer /select,"D:\LOCAL_DEV\_temp\DentalClientBase\invoice_exports\."')
-        # subprocess.Popen(r'explorer /select' + APP_INVOICE_EXPORT_DIR)
         filename = ""
+        sOpenDir = APP_INVOICE_EXPORT_DIR
+        if self.ActiveClientID is not None:
+            dentalDoctor = self.ParsedDentalDatabase.GetDoctorFromID(self.ActiveClientID)
+            sOpenDir = dentalDoctor.GetExportName()
+
         filters = ["HTML Invoice (*.html)", "PDF Invoice (*.pdf)", "Dental Database Invoice (*.html *.pdf)", "Any files (*)"]
-        dialog = QtGui.QFileDialog(self, "Open Exported Invoice", directory = APP_INVOICE_EXPORT_DIR)
+        dialog = QtGui.QFileDialog(self, "Open Exported Invoice", directory = sOpenDir)
         dialog.setNameFilters(filters)
         dialog.setViewMode(QtGui.QFileDialog.Detail)
         dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
         dialog.setFileMode(QtGui.QFileDialog.ExistingFile)
+        
         if dialog.exec_():
             filename = dialog.selectedFiles()[0]
+        
         if filename == "":
             sMsg = "No exported invoice selected for viewing."
             toolkit_ShowWarningMessage(sMsg)
             return 0
+        
         webbrowser.open_new_tab(filename)
         return 0
 
@@ -659,11 +664,19 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             toolkit_ShowWarningMessage(sMsg)
             return 0
         
-        # attempt to export an invoice
+        # create export folder if doesnt exist
         if not QtCore.QDir(APP_INVOICE_EXPORT_DIR).exists():
-        	QtCore.QDir().mkdir(APP_INVOICE_EXPORT_DIR)
+            QtCore.QDir().mkdir(APP_INVOICE_EXPORT_DIR)
 
-        sExportedInvoice , sExportedInvoicePDF = ExportInvoice(iInvoiceID, sCurrentMonth, sCurrentYear, dentalDoctor, listDentalActs, listDentalPayments)
+        # create doctor sub folder if doesnt exist
+        sDoctorExportName = dentalDoctor.GetExportName()
+        sExportSubFolder = os.path.join(APP_INVOICE_EXPORT_DIR, sDoctorExportName)
+        if not QtCore.QDir(sExportSubFolder).exists():
+            QtCore.QDir().mkdir(sExportSubFolder)
+        
+        sExportedInvoice , sExportedInvoicePDF = ExportInvoice( iInvoiceID, 
+                                                                sCurrentMonth, sCurrentYear, 
+                                                                dentalDoctor, listDentalActs, listDentalPayments)
         
         if sExportedInvoice is None:
             toolkit_ReportUndefinedBehavior("OnExportInvoice: sExportedInvoice (#{0}) is None.".format(iInvoiceID))

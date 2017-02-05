@@ -4,7 +4,7 @@ import os
 # GENERAL SETTINGS
 #########################
 # VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       11       .           4         .         2      '
+__version__ =  '      0       .       11       .           5         .         2      '
 
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
@@ -15,6 +15,8 @@ APP_LOGO_PNG_NAME = "logonew.png"
 APP_LOGO_ICO_NAME = "logonew.ico"
 APP_BANNER_NAME = "banner.png"
 APP_MAIN_SCRIPT = 'DentalClientBaseGUI.py'
+
+APP_LOGO_MD5=None
 
 # selection-background-color: qlineargradient(x1: 0, y1: 0.0, x2: 0.9, y2: 0.9,
                                 # stop: 0 #9999ff, stop: 1 white);
@@ -80,11 +82,11 @@ APP_SETTINGS_TABLE_ACTS_FONTSIZE = 10
 
 # Column indices - enum style
 COL_ACTDATE         = 0
-COL_ACTPATIENT      = 1 
-COL_ACTTYPE         = 2
-COL_ACTUNITPRICE    = 3
-COL_ACTQTY          = 4
-COL_ACTSUBTOTAL     = 5
+COL_ACTTYPE         = 1
+COL_ACTUNITPRICE    = 2
+COL_ACTQTY          = 3
+COL_ACTSUBTOTAL     = 4
+COL_ACTPATIENT      = 5 
 COL_ACTNOTES        = 6 
 
 COL_ACTPAID         = 7 
@@ -97,8 +99,8 @@ APP_SETTINGS_ACTDATE_FORMAT_DISPLAY = "dd/MM/yyyy"		#  01/01/2000
 # Column size
 ACT_TABLE_COLUMNSIZE_DATE 		= 0.15 # 200
 ACT_TABLE_COLUMNSIZE_TYPE 		= 0.15 # 200
-ACT_TABLE_COLUMNSIZE_PATIENT 	= 0.15 # 200
-ACT_TABLE_COLUMNSIZE_NOTES 		= 0.35 # 400
+ACT_TABLE_COLUMNSIZE_PATIENT 	= 0.1 # 200
+ACT_TABLE_COLUMNSIZE_NOTES 		= 0.5 # 400
 ACT_TABLE_COLUMNSIZE_UNITPRICE 	= 0.1  # 100
 ACT_TABLE_COLUMNSIZE_QTY 		= 0.1  # 100
 ACT_TABLE_COLUMNSIZE_TOTAL 		= 0.1  # 100

@@ -1,6 +1,11 @@
 # DentalClientBase Changelog
 *****************************
 
+* v0.11.5.2:
+- Create subfolder for each doctor when exporting invoice
+- Changed order of patient column in table and invoice
+- Logo is hardcoded into the html invoice
+
 * v0.11.4.2:
 - Add currency in interface and invoice when applicable
 - Correct test function in Structs

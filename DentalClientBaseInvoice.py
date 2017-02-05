@@ -8,17 +8,10 @@ http://pbpython.com/pdf-reports.html
 from jinja2 import Environment, FileSystemLoader
 # from weasyprint import HTML
 import os
-# import base64
-
 from DentalClientBaseStructs import *
 from DentalClientBaseToolkit import *
 from DentalClientBaseSettings import *
 
-# logoPath = os.path.join(APP_RESOURCES_FOLDER, "logo.png")
-# logoHtmlSrc = os.path.join(APP_INVOICE_RESOURCES_FOLDER, "logo_src.txt")
-# encoded_logo = base64.b64encode(open(APP_BANNER_PATH, "rb").read())
-# with open(logoHtmlSrc, "w") as text_file:
-#     text_file.write(encoded_logo)
 
 def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
     Act = dentalActInstance
@@ -114,7 +107,7 @@ def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs, listD
     sReported += " {0}".format(STRSETTING_Currency_symbol)
 
     # if logo hash function unchanged, store this value and re-use to save time
-    # sEncodedLogo = base64.b64encode(open(APP_BANNER_PATH, "rb").read())
+    sEncodedLogo = toolkit_EncodeLogo()
 
     sHtmlTemplatePath = "index_template.html"
     # sHtmlTemplatePath = os.path.join(APP_INVOICE_RESOURCES_FOLDER,"index_template.html") 
@@ -123,7 +116,7 @@ def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs, listD
     env = Environment(loader=FileSystemLoader(APP_INVOICE_RESOURCES_FOLDER))
     template = env.get_template(sHtmlTemplatePath)
     template_vars = {
-                     # "tag_logo" : sEncodedLogo,
+                     "tag_logo" : sEncodedLogo,
                      "tag_user_notice" : "Nothing to mention",
                      "tag_invoice_id": iInvoiceID,
                      "tag_actual_date": sActualDate,
@@ -141,16 +134,15 @@ def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs, listD
 
     # Render our file and create the PDF using our css style file
     sHtmlContent = template.render(template_vars)
-
-    sName = dentalClient.GetFullName()
-    sNameNoSpace = sName.replace(" ", "_")
-    sOutputFname = "invoice_{0}____{1}".format(iInvoiceID,sNameNoSpace)
-    HtmlOutPath = os.path.join(APP_INVOICE_EXPORT_DIR,sOutputFname+".html") 
+    
+    sOutputFname = "invoice_{0}".format(iInvoiceID)
+    sDoctorExportName = dentalClient.GetExportName()
+    HtmlOutPath = os.path.join(APP_INVOICE_EXPORT_DIR,sDoctorExportName,sOutputFname+".html")
 
     with open(HtmlOutPath, "w") as text_file:
         text_file.write("{0}".format(sHtmlContent))
 
-    PdfOutPath = os.path.join(APP_INVOICE_EXPORT_DIR,sOutputFname+".pdf") 
+    PdfOutPath = os.path.join(APP_INVOICE_EXPORT_DIR,sDoctorExportName,sOutputFname+".pdf") 
     # HTML(string=sHtmlContent).write_pdf(PdfOutPath, stylesheets=[sHtmlCSSPath])  
 
     return HtmlOutPath, PdfOutPath
@@ -168,9 +160,13 @@ if __name__ == "__main__":
 
         sPathToInvoiceHTML = str()
         sPathToInvoicePDF = str()
-        sPathToInvoiceHTML , sPathToInvoicePDF  = ExportInvoice(56, "02" , "2016", last_doctor, list_of_acts, list_of_payments)
+        # sPathToInvoiceHTML , sPathToInvoicePDF  = ExportInvoice(56, "02" , "2016", last_doctor, list_of_acts, list_of_payments)
 
-    test()
+    def test2():
+        sEncodedLogo = toolkit_EncodeLogo()
+        print sEncodedLogo
+
+    test2()
 
 """
 Template tags
