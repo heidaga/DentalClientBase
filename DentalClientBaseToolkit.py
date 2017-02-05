@@ -25,6 +25,7 @@ from urllib import quote
 APP_SETTINGS_ACTDATE_FORMAT_DATABASE = "dd/MM/yyyy"
 
 HASH_ROLE = 1000
+READ_MODEL_ROLE = 2000
 
 ########################
 # Qt dependent settings
@@ -439,15 +440,16 @@ class ActTableModel(QtCore.QAbstractTableModel):
             if iCol == COL_ACTDATE: 
                 qDate = QtCore.QDate.fromString(val, APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
                 return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            elif iCol in [COL_ACTSUBTOTAL, COL_ACTUNITPRICE]:
+                return "{0} {1}".format(val, STRSETTING_Currency_symbol)
             else: 
                 return val
         
-        # elif role == QtCore.Qt.BackgroundRole:
-        #     iPaid = dentalActAtRow.__getitem__(COL_ACTPAID)
-        #     if(iPaid == 1): 
-        #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.blue)
-        #     else:
-        #         background = QtGui.QBrush(QtCore.Qt.GlobalColor.white)
+        elif role == READ_MODEL_ROLE:
+            if iCol < 0 or iCol > self.columnCount(None): return None
+            val = dentalActAtRow.__getitem__(iCol)
+            return val
+        
 
     def headerData(self, col, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
@@ -621,8 +623,17 @@ class PaymentTableModel(QtCore.QAbstractTableModel):
             if iCol == COL_PAYMENTDATE: 
                 qDate = QtCore.QDate.fromString(val, APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
                 return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            
+            elif iCol == COL_PAYMENTSUM:
+                return "{0} {1}".format(val, STRSETTING_Currency_symbol)
+            
             else: 
                 return val
+
+        elif role == READ_MODEL_ROLE:
+            if iCol < 0 or iCol > self.columnCount(None): return None
+            val = dentalPaymentAtRow.__getitem__(iCol)
+            return val
 
     def headerData(self, col, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
@@ -705,7 +716,7 @@ class DentalPaymentDelegate(QtGui.QStyledItemDelegate):
     def setEditorData(self, editor, index):
         if editor.metaObject().className() == "QLineEdit":
             # val can be a float (unit price) or string (patient name)
-            val = index.model().data(index, QtCore.Qt.DisplayRole)
+            val = index.model().data(index, READ_MODEL_ROLE)
             editor.setText(str(val))
         elif editor.metaObject().className() == "QDateEdit":
             sDate = index.model().data(index, QtCore.Qt.DisplayRole)
@@ -751,7 +762,7 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
         # iCol = index.column()
         if editor.metaObject().className() == "QLineEdit":
             # val can be a float (unit price) or string (patient name)
-            val = index.model().data(index, QtCore.Qt.DisplayRole)
+            val = index.model().data(index, READ_MODEL_ROLE)
             editor.setText(str(val))
 
         elif editor.metaObject().className() == "QDateEdit":

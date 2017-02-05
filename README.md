@@ -1,6 +1,10 @@
 # DentalClientBase Changelog
 *****************************
 
+* v0.11.4.2:
+- Add currency in interface and invoice when applicable
+- Correct test function in Structs
+
 * v0.11.3.2:
 - Improvement: no warning if empty act type combo is clicked
 - Improvement: warning if trying to edit unit price while act type combo is empty

@@ -438,9 +438,9 @@ if __name__ == '__main__':
 		id2 = MyDatabase.AddDoctorByDetails("Khalil", "Gebran", "71555444")
 		id3 = MyDatabase.AddDoctorByDetails("Alaa", "Zalzali", "70885146")
 
-		MyDatabase.SetDefaultActsByDoctorID(id1, defaultprices)
-		MyDatabase.SetDefaultActsByDoctorID(id2, defaultprices)
-		MyDatabase.SetDefaultActsByDoctorID(id3, defaultprices)
+		MyDatabase.SetDoctorPricesByDoctorID(id1, defaultprices)
+		MyDatabase.SetDoctorPricesByDoctorID(id2, defaultprices)
+		MyDatabase.SetDoctorPricesByDoctorID(id3, defaultprices)
 		 
 		MyDatabase.AppendActByInstanceToDoctorByID(id1, DentalAct("05/02/2015", "Sahar K.", "CERAMIC", 2))
 		MyDatabase.AppendActByInstanceToDoctorByID(id1, DentalAct("25/03/2015", "Ali M.","FULL-DENTURE", 10))

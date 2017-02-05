@@ -43,6 +43,7 @@ def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
         val = Act.__getitem__(iHeader)
         if iHeader in [COL_ACTUNITPRICE, COL_ACTSUBTOTAL]:
             sval = format(val, INVOICE_FLOAT_FORMAT)
+            sval += " {0}".format(STRSETTING_Currency_symbol)
         else:
             sval = val 
 
@@ -104,6 +105,14 @@ def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs, listD
     for jAct in listDentalActs:
         fGrandTotal += jAct.SubTotal
 
+    sGrandTotal = format(fGrandTotal, INVOICE_FLOAT_FORMAT)
+    sPaid = format(fPaid, INVOICE_FLOAT_FORMAT)
+    sReported = format(fGrandTotal-fPaid, INVOICE_FLOAT_FORMAT)
+
+    sGrandTotal += " {0}".format(STRSETTING_Currency_symbol)
+    sPaid += " {0}".format(STRSETTING_Currency_symbol)
+    sReported += " {0}".format(STRSETTING_Currency_symbol)
+
     # if logo hash function unchanged, store this value and re-use to save time
     # sEncodedLogo = base64.b64encode(open(APP_BANNER_PATH, "rb").read())
 
@@ -125,9 +134,9 @@ def ExportInvoice(iInvoiceID, sMonth, sYear, dentalClient, listDentalActs, listD
                      "tag_payment_method": "Cash",
                      "tag_payment_identifier": "-",
                      "tag_acts_header_and_details": act_headers_and_details,
-                     "tag_total_sum": format(fGrandTotal, INVOICE_FLOAT_FORMAT),
-                     "tag_total_paid": format(fPaid, INVOICE_FLOAT_FORMAT),
-                     "tag_total_remaining": format(fGrandTotal-fPaid, INVOICE_FLOAT_FORMAT),
+                     "tag_total_sum": sGrandTotal, 
+                     "tag_total_paid": sPaid,
+                     "tag_total_remaining": sReported,
                      }
 
     # Render our file and create the PDF using our css style file

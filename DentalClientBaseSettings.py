@@ -4,7 +4,7 @@ import os
 # GENERAL SETTINGS
 #########################
 # VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       11       .           3         .         2      '
+__version__ =  '      0       .       11       .           4         .         2      '
 
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
@@ -152,6 +152,8 @@ BOOLSETTING_Preview_exported_invoice_in_Invoice_Viewer = False
 BOOLSETTING_Preview_exported_invoice_in_internet_browser = True
 BOOLSETTING_Convert_exported_invoice_to_pdf_without_preview = True
 INTSETTING_Maximum_number_of_invoice_tabs_in_Invoice_Viewer = 5
+
+STRSETTING_Currency_symbol="$"
 
 
 ###############################################
