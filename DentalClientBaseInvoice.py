@@ -14,7 +14,6 @@ from DentalClientBaseSettings import *
 
 
 def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
-    Act = dentalActInstance
     s = str()
     if mode == 1:
         s+= "    <tr>\n"
@@ -33,14 +32,17 @@ def to_html_dentalActInstance(iID , dentalActInstance, mode = 1):
         if iHeader == COL_ACTQTY : css_class = " class=\"qty\""
         if iHeader == COL_ACTSUBTOTAL : css_class = " class=\"total\""
 
-        val = Act.__getitem__(iHeader)
+        val = dentalActInstance.__getitem__(iHeader)
         if iHeader in [COL_ACTUNITPRICE, COL_ACTSUBTOTAL]:
             sval = format(val, INVOICE_FLOAT_FORMAT)
             sval += " {0}".format(STRSETTING_Currency_symbol)
         else:
             sval = val 
 
-        s+= "      <td{0}>{1}</td>\n".format(css_class, sval)
+        if dentalActInstance.__getitem__(COL_ACTPAID) == 0:
+            s+= "      <td{0}>{1}</td>\n".format(css_class, sval)
+        else:
+            s+= "      <td{0}><font color=\"#FF0000\"><b>{1}</b></font></td>\n".format(css_class, sval)
 
     return s
 
@@ -166,7 +168,7 @@ if __name__ == "__main__":
         sEncodedLogo = toolkit_EncodeLogo()
         print sEncodedLogo
 
-    test2()
+    # test2()
 
 """
 Template tags

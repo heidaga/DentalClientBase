@@ -49,13 +49,11 @@ class DentalAct:
 		self.SubTotal = self.Qty  * self.UnitPrice
 		self.PatientName = sPatient
 		self.Notes = ""
-
-		# Not to be viewed
 		self.Paid = 0
 
 	def __len__(self):
 		""" returns number of member variables to be used externally (by Qt) """
-		return 7
+		return 8
 
 	def GetMonth(self):
 		# ATTENTION: APP_SETTINGS_ACTDATE_FORMAT_DISPLAY

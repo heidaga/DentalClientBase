@@ -38,6 +38,7 @@ ACT_TABLE_ALIGNEMENT_TYPE = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
 ACT_TABLE_ALIGNEMENT_PATIENT = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
 ACT_TABLE_ALIGNEMENT_NOTES = QtCore.Qt.AlignLeft and QtCore.Qt.AlignVCenter
 ACT_TABLE_ALIGNEMENT_FLOATS = QtCore.Qt.AlignCenter #and QtCore.Qt.AlignVCenter
+ACT_TABLE_ALIGNEMENT_PAID = QtCore.Qt.AlignCenter #and QtCore.Qt.AlignVCenter
 
 #Font: QFont(const QString & family, int pointSize = -1, int weight = -1, bool italic = false)
 sFont = APP_SETTINGS_TABLE_ACTS_FONT
@@ -451,16 +452,25 @@ class ActTableModel(QtCore.QAbstractTableModel):
                 return ACT_TABLE_ALIGNEMENT_DATE
             elif iCol == COL_ACTNOTES:
                 return ACT_TABLE_ALIGNEMENT_NOTES
+            elif iCol == COL_ACTPAID:
+                return ACT_TABLE_ALIGNEMENT_PAID
 
         elif role == QtCore.Qt.DisplayRole:
             if iCol < 0 or iCol > self.columnCount(None): return None
             # `__getitem__` used also by "sorted"
             val = dentalActAtRow.__getitem__(iCol)
+            
             if iCol == COL_ACTDATE: 
                 qDate = QtCore.QDate.fromString(val, APP_SETTINGS_ACTDATE_FORMAT_DATABASE)
                 return qDate.toString(APP_SETTINGS_ACTDATE_FORMAT_DISPLAY)
+            
             elif iCol in [COL_ACTSUBTOTAL, COL_ACTUNITPRICE]:
                 return "{0} {1}".format(val, STRSETTING_Currency_symbol)
+            
+            elif iCol == COL_ACTPAID: 
+                if val == 0: return str("NO")
+                if val == 1: return str("YES")
+            
             else: 
                 return val
         
@@ -781,6 +791,9 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
             editor.setEditable(False)
             editor.addItems(self.list_of_default_acts)
             return editor
+        elif iCol == COL_ACTPAID:
+            editor = QtGui.QCheckBox(parent)
+            return editor
 
     def setEditorData(self, editor, index):
         # iCol = index.column()
@@ -803,6 +816,11 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
             # which means ignore the default flag CaseSensitive
             itemID = editor.findText(sComboText, QtCore.Qt.MatchExactly)
             editor.setCurrentIndex(itemID)
+
+        elif editor.metaObject().className() == "QCheckBox":
+            bVal = bool(index.model().data(index, READ_MODEL_ROLE))
+            print "bVal: ", bVal
+            editor.setChecked(bVal)
 
     def setModelData(self, editor, model, index):
                 
@@ -827,6 +845,10 @@ class DentalActDelegate(QtGui.QStyledItemDelegate):
                 ret = toolkit_ShowWarningMessage2(sMsg)
                 if(ret == QMessageBox.Ok):
                     model.setData(index, sComboText, QtCore.Qt.EditRole)
+
+        elif editor.metaObject().className() == "QCheckBox":
+            iVal = int(editor.isChecked())
+            model.setData(index, iVal, QtCore.Qt.EditRole)
 
     def setActTypesStringList(self, sList):
         """ this method only loads the Types without prices as these can vary 

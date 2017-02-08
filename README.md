@@ -1,6 +1,10 @@
 # DentalClientBase Changelog
 *****************************
 
+* v0.11.7.4:
+-Improvment: Add "Special Act" column to change act 
+ color in exported invoice
+
 * v0.11.6.4:
 - Improvement: allow editing doctor details 
 

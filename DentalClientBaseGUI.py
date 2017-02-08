@@ -907,6 +907,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
             table_view.setColumnWidth(COL_ACTUNITPRICE,     iWIDTH*ACT_TABLE_COLUMNSIZE_UNITPRICE)
             table_view.setColumnWidth(COL_ACTQTY,           iWIDTH*ACT_TABLE_COLUMNSIZE_QTY)
             table_view.setColumnWidth(COL_ACTSUBTOTAL,      iWIDTH*ACT_TABLE_COLUMNSIZE_TOTAL)
+            table_view.setColumnWidth(COL_ACTPAID,          iWIDTH*ACT_TABLE_COLUMNSIZE_PAID)
             
         elif table_view is self.ui.m_TableViewPayments:
             table_view.setColumnWidth(COL_PAYMENTDATE,      iWIDTH*PAYMENT_TABLE_COLUMNSIZE_DATE)
