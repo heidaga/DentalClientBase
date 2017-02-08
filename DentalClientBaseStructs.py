@@ -197,6 +197,12 @@ class DentalClient:
 	def SetVarPhone(self, sVal):
 		self.Phone = str(sVal)
 
+	def SetVarEmail(self, sVal):
+		self.Email = str(sVal)
+
+	def SetVarAddress(self, sVal):
+		self.Address = str(sVal)
+
 	""" 
 		ONLY FOR SORTING : acts as a getter 
 		To sort dates, i only return the date string
@@ -342,6 +348,27 @@ class DentalDatabase:
 		else: 
 			self.ClientsMap[newdoctor_id] = newdoctor
 			return newdoctor_id
+	#TODO
+	# def MirrorActsFromDoctor1ToDoctor2(self, dentalClient1, dentalClient2):
+	# 	return 0
+
+	def AppendActsFromDoctor1ToDoctor2(self, dentalClient1, dentalClient2):
+		id1 = dentalClient1.id()
+		id2 = dentalClient2.id()
+		sMsg = "AppendActsFromDoctor1ToDoctor2 (Error):\n"
+		if not id1 in self.ClientsMap: 
+			sMsg += "the SOURCE dental client instance is not the database"
+			print sMsg
+			return 0
+		if not id2 in self.ClientsMap: 
+			sMsg += "the DESTINATION dental client instance is not the database"
+			print sMsg
+			return 0
+
+		dentalClient2.acts.extend(list(dentalClient1.acts))
+		# for jAct in lacts:
+			# self.AppendActByInstanceToDoctorByID(id2, jAct)
+		return 0
 
 	def GetNbDoctors(self):
 		return len(self.ClientsMap)
@@ -399,11 +426,40 @@ class DentalDatabase:
 		if doctor is None: return 0
 		return doctor.GetDoctorPrices()
 
+
 	def SetDoctorPricesByDoctorID(self, iDoctorID, dictOfDefaultPrices):
 		""" returns a dict """
 		doctor = self.GetDoctorFromID(iDoctorID)
 		if doctor is None: return 0
 		doctor.SetDoctorPrices(dictOfDefaultPrices)
+		return 0
+
+	def EditDoctorInformationByID(self, iDoctorID, newDentalClient):
+		doctor = self.GetDoctorFromID(iDoctorID)
+		oldID = iDoctorID
+		newID = newDentalClient.id()
+		if doctor is None: return 0
+		bUpdateDatabaseMap = False
+		
+		if doctor.Firstname != newDentalClient.Firstname:
+			bUpdateDatabaseMap = True
+			doctor.SetVarFirstname(newDentalClient.Firstname)
+
+		if doctor.Lastname != newDentalClient.Lastname:
+			bUpdateDatabaseMap = True
+			doctor.SetVarLastname(newDentalClient.Lastname)
+
+		if doctor.Phone != newDentalClient.Phone:
+			bUpdateDatabaseMap = True
+			doctor.SetVarPhone(newDentalClient.Phone)
+
+		doctor.SetVarEmail(newDentalClient.Email)
+		doctor.SetVarAddress(newDentalClient.Address)
+		
+		if bUpdateDatabaseMap:
+			self.ClientsMap[newID] = self.ClientsMap.pop(oldID)
+			# print "DEBUG: oldID ({0}) has been replaced by newID ({1})".format(oldID, newID)
+
 		return 0
 
 instance_of_dental_database = DentalDatabase()

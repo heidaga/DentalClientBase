@@ -253,6 +253,11 @@ class DoctorTableModel(QtCore.QAbstractTableModel):
     def IsUpToDate(self):
         """ return boolean to check if user changed values """
         return self.bUpToDate
+
+    def SetUpToDate(self, bVal):
+        """ sets boolean UpToDate from the outside """
+        self.bUpToDate = bVal
+        return 0
     # ***************************************************
 
     def rowCount(self, parent):
@@ -401,6 +406,11 @@ class ActTableModel(QtCore.QAbstractTableModel):
     def IsUpToDate(self):
         """ return boolean to check if user changed values """
         return self.bUpToDate
+
+    def SetUpToDate(self, bVal):
+        """ sets boolean UpToDate from the outside """
+        self.bUpToDate = bVal
+        return 0
 
     def rowCount(self, parent):
         return len(self.mylist)
@@ -595,6 +605,11 @@ class PaymentTableModel(QtCore.QAbstractTableModel):
     def IsUpToDate(self):
         """ return boolean to check if user changed values """
         return self.bUpToDate
+
+    def SetUpToDate(self, bVal):
+        """ sets boolean UpToDate from the outside """
+        self.bUpToDate = bVal
+        return 0
     # ***************************************************
 
     def rowCount(self, parent):

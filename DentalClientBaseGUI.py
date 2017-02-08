@@ -491,6 +491,7 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.ui.PB_RemovePayment.clicked.connect(self.OnRemovePayment)
         self.ui.PB_ToggleInvoiceViewer.clicked.connect(self.OnShowHideInvoiceViewer)
         self.ui.m_TableViewClients.clicked.connect(self.OnActivateClient)
+        self.ui.m_TableViewClients.doubleClicked.connect(self.OnEditClient)
 
         self.AppSettings.MySignal.PricesChanged.connect(self.OnPricesChanged)
         self.TableModelActs.MySignal.PricesChanged.connect(self.OnPricesChanged)
@@ -792,8 +793,9 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
     def OnAddDoctor(self):
         qDialog = self.NewDoctorDialog
         qDialog.cleanLineEdits()
+        qDialog.setButtonToAddDoctor()
         if qDialog.exec_() == QtGui.QDialog.Accepted:
-            newDentalClient = qDialog.getNewDoctor()
+            newDentalClient = qDialog.getDoctorFromGUI()
             if newDentalClient is None:
                 sMsg = "OnAddDoctor: newDentalClient is None."
                 sMsg += "I couldn't create a DentalClient from the params given by the opened dialog" 
@@ -814,9 +816,34 @@ class DentalClientBaseGUI(QtGui.QMainWindow):
         self.TableModelDoctors.RemoveDoctorFromDatabase(self.ActiveClientID)
         return 0 
 
+    def OnEditClient(self, qIndex):
+        """ edit the selected doctor
+            Used with a "doubleClicked" signal fired from QTableView
+        """
+        iRow = qIndex.row()
+        clientHashId = self.TableModelDoctors.getHashIDFromSelectedDoctor(qIndex)
+        # self.UpdateDoctorDetailsByID()
+        oldDentalClient = self.ParsedDentalDatabase.GetDoctorFromID(clientHashId)
+        qDialog = self.NewDoctorDialog
+        qDialog.setDoctorFromGUI(oldDentalClient)
+        qDialog.setButtonToEditDoctor()
+        if qDialog.exec_() != QtGui.QDialog.Accepted: return 0
+
+        newDentalClient = qDialog.getDoctorFromGUI()
+        if newDentalClient is None:
+            sMsg = "OnEditClient: newDentalClient is None."
+            sMsg += "I couldn't edit a DentalClient from the params given by the opened dialog" 
+            toolkit_ReportUndefinedBehavior(sMsg)
+            return 0
+        
+        oldID = oldDentalClient.id()
+        self.ParsedDentalDatabase.EditDoctorInformationByID(oldID, newDentalClient)
+        self.TableModelDoctors.SetUpToDate(False)
+        return 0
+
     def OnActivateClient(self, qIndex):
         """ Visualise/edit database of acts for the selected doctor
-            Used with a "doubleClicked" signal fired from QTableView
+            Used with a "clicked" signal fired from QTableView
         """
         iRow = qIndex.row()
         self.ActiveClientID = self.TableModelDoctors.getHashIDFromSelectedDoctor(qIndex)
@@ -906,6 +933,14 @@ class QNewDoctorDialog(QtGui.QDialog):
         if self.ui.phoneNumber.text() == "": return False
         return True
 
+    def setButtonToAddDoctor(self):
+        self.ui.PB_Ok.setText("Add Doctor")
+        return 0
+
+    def setButtonToEditDoctor(self):
+        self.ui.PB_Ok.setText("Edit Doctor")
+        return 0
+
     def cleanLineEdits(self):
         self.ui.firstName.setText("")
         self.ui.lastName.setText("")
@@ -913,7 +948,7 @@ class QNewDoctorDialog(QtGui.QDialog):
         self.ui.address.setText("")
         self.ui.email.setText("")
     
-    def getNewDoctor(self):
+    def getDoctorFromGUI(self):
         """ Returns a DentalClient instance """
         fn = str(self.ui.firstName.text()).strip()
         ln = str(self.ui.lastName.text()).strip()
@@ -921,6 +956,14 @@ class QNewDoctorDialog(QtGui.QDialog):
         em = str(self.ui.email.text()).strip()
         ad = str(self.ui.address.text()).strip()
         return DentalClient(fn, ln, pn, em, ad)
+          
+    def setDoctorFromGUI(self, dentalClientInstance):
+        self.ui.firstName.setText(str(dentalClientInstance.Firstname))
+        self.ui.lastName.setText(str(dentalClientInstance.Lastname))
+        self.ui.phoneNumber.setText(str(dentalClientInstance.Phone))
+        self.ui.email.setText(str(dentalClientInstance.Email))
+        self.ui.address.setText(str(dentalClientInstance.Address))
+        return 0
                             
     def accept(self):
         if self.validate():

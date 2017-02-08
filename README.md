@@ -1,6 +1,9 @@
 # DentalClientBase Changelog
 *****************************
 
+* v0.11.6.4:
+- Improvement: allow editing doctor details 
+
 * v0.11.5.4:
 - Bug fix: allow deleting any selected act in the preferences 
   default

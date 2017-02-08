@@ -4,7 +4,7 @@ import os
 # GENERAL SETTINGS
 #########################
 # VERSION=      MAJOR_VERSION . MINOR_VERSION  . IMPROVEMENT_FEATURE . BUG_CORRECTION
-__version__ =  '      0       .       11       .           5         .         4      '
+__version__ =  '      0       .       11       .           6         .         4      '
 
 APP_NAME = "Dental Client Database"
 APP_LICENSE = "(Licensed for Mr. Hussein FTOUNI)"
